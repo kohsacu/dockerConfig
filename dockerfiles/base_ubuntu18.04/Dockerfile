@@ -6,7 +6,7 @@ USER root
 
 ENV HOME /home/devel
 ENV GOPATH ${HOME}/go
-ENV PATH ${HOME}/bin:/opt/go/bin:/opt/local/bin:/opt/local/sbin:${PATH}:${GOPATH}/bin
+ENV PATH ${HOME}/bin:/opt/local/sbin:/opt/local/bin:${PATH}:${GOPATH}/bin:/opt/go/bin
 
 # 作業用ユーザの作成
 RUN set -x \
@@ -24,9 +24,9 @@ RUN set -x \
   && mkdir -p ${HOME}/go \
   && mkdir -p ${HOME}/volume \
   && chown -R devel. ${HOME} \
-  && : "== Add PATH ==" && {
-      echo "export PATH=${PATH}" \
-      echo "export GOPATH=${GOPATH}" \
+  && : "== Add PATH ==" && { \
+      echo "export PATH=${PATH}"; \
+      echo "export GOPATH=${GOPATH}"; \
     } | tee -a ${HOME}/.bashrc
 
 # レビューを考慮して「1行 1パッケージ」「アルファベット順」に記述する事
@@ -49,11 +49,11 @@ RUN set -x \
     vim \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-COPY ./common/init.sh /opt/local/bin/
+COPY ./common/init.sh /opt/local/sbin/
 RUN set -x \
   && : "== Add ENTRYPOINT script ==" \
-  && chown root. /opt/local/bin/init.sh \
-  && chmod 744   /opt/local/bin/init.sh
+  && chown root. /opt/local/sbin/init.sh \
+  && chmod 744   /opt/local/sbin/init.sh
 ENTRYPOINT ["init.sh"]
 
 VOLUME ["/home/devel/volume"]
