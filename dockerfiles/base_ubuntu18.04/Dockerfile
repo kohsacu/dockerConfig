@@ -45,6 +45,7 @@ RUN set -x \
     python3 \
     sudo \
     tcpdump \
+    time \
     traceroute \
     vim \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
