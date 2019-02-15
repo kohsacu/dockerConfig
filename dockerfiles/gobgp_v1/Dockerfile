@@ -50,6 +50,39 @@ RUN set -x \
     vim \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# Install the Go tools
+RUN set -x \
+  && : "== golang v1.11.5 ==" \
+  && curl -L https://dl.google.com/go/go1.11.5.linux-amd64.tar.gz \
+    -o /tmp/go1.11.5.linux-amd64.tar.gz \
+  && sha256sum /tmp/go1.11.5.linux-amd64.tar.gz \
+  && : "== SHA256 Checksum: ff54aafedff961eb94792487e827515da683d61a5f9482f668008832631e5d25 ==" \
+  && tar -C /opt -zxpf /tmp/go1.11.5.linux-amd64.tar.gz \
+  && rm -f /tmp/go1.11.5.linux-amd64.tar.gz
+
+# Build gobgp
+RUN set -x \
+  && sudo -E -u devel time /opt/go/bin/go get -u github.com/golang/dep/cmd/dep \
+  && sudo -u devel mkdir -p ${GOPATH}/src/github.com/osrg \
+  && sudo -u devel mkdir -p ${GOPATH}/src/github.com/influxdata
+WORKDIR ${GOPATH}/src/github.com/influxdata
+RUN set -x \
+  && sudo -E -u devel git clone https://github.com/influxdata/influxdb.git
+WORKDIR influxdb
+RUN set -x \
+  && : "== influxdb branch 1.8 ==" \
+  && sudo -E -u devel git checkout remotes/origin/1.8
+WORKDIR ${GOPATH}/src/github.com/osrg
+RUN set -x \
+  && sudo -E -u devel git clone https://github.com/osrg/gobgp.git
+WORKDIR gobgp
+RUN set -x \
+  && : "== gobgp v1.33 ==" \
+  && sudo -E -u devel git checkout refs/tags/v1.33 \
+  && sudo -E -u devel time /opt/go/bin/go get github.com/osrg/gobgp/gobgp \
+  && sudo -E -u devel time /opt/go/bin/go get github.com/osrg/gobgp/gobgpd
+# && sudo -E -u devel ${GOPATH}/bin/dep ensure
+
 COPY ./common/init.sh /opt/local/sbin/
 RUN set -x \
   && : "== Add ENTRYPOINT script ==" \
