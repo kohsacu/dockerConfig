@@ -127,7 +127,8 @@ RUN set -x \
   && sudo -E -u "${LOGIN_USER}" time /opt/go/bin/go get -u github.com/golang/dep/cmd/dep \
   && sudo -u "${LOGIN_USER}" mkdir -p ${GOPATH}/src/github.com/influxdata \
   && sudo -u "${LOGIN_USER}" mkdir -p ${GOPATH}/src/github.com/osrg \
-  && sudo -u "${LOGIN_USER}" mkdir -p ${GOPATH}/src/github.com/obgm
+  && sudo -u "${LOGIN_USER}" mkdir -p ${GOPATH}/src/github.com/obgm \
+  && sudo -u "${LOGIN_USER}" mkdir -p ${GOPATH}/src/github.com/nttdots
 WORKDIR ${GOPATH}/src/github.com/influxdata
 RUN set -x \
   && sudo -E -u "${LOGIN_USER}" git clone https://github.com/influxdata/influxdb.git
@@ -156,6 +157,7 @@ RUN set -x \
   && sudo -E -u "${LOGIN_USER}" git clone https://github.com/obgm/libcoap.git
 WORKDIR libcoap
 RUN set -x \
+  && : "== libcoap 1eadd91 ==" \
   && sudo -E -u "${LOGIN_USER}" git checkout 1eadd91366cab46767f26e4d10e005198246eac1 \
   && sudo -u "${LOGIN_USER}" ./autogen.sh \
   && sudo -u "${LOGIN_USER}" PKG_CONFIG_LIBDIR="/opt/local/lib/pkgconfig" \
@@ -168,7 +170,16 @@ RUN set -x \
 
 ## Build go-dots
 ## * Not go get '-u' option
+## ===========================================================================
+## d5c0d8b Merge branch 'develop' of https://github.com/nttdots/dots-go-implementation into masterpublic
+## ===========================================================================
+WORKDIR ${GOPATH}/src/github.com/nttdots
 RUN set -x \
+  && sudo -E -u "${LOGIN_USER}" git clone https://github.com/nttdots/go-dots
+WORKDIR go-dots
+RUN set -x \
+  && : "== go-dots d5c0d8b ==" \
+  && sudo -E -u "${LOGIN_USER}" git checkout d5c0d8b76ba1d945430b0cbe3c89fc42404737a8 \
   && sudo -E -u "${LOGIN_USER}" \
     CGO_CFLAGS="-I/opt/local/include" \
     CGO_LDFLAGS="-L/opt/local/lib" \
