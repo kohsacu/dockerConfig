@@ -34,7 +34,7 @@ RUN set -x \
   && mkdir -p "${HOME}"/git-local \
   && mkdir -p "${HOME}"/go \
   && mkdir -p "${HOME}"/volume \
-  && chown -R "${LOGIN_USER}". ${HOME} \
+  && chown -R "${LOGIN_USER}". "${HOME}" \
   && : "== Add PATH ==" \
   && { \
     echo "export PATH=${PATH}"; \
@@ -110,9 +110,9 @@ RUN set -x \
     echo "$(cat ./openssl-1.1.1a.tar.gz.sha256)  openssl-1.1.1a.tar.gz"; \
   } | tee -a ./openssl-1.1.1a.tar.gz.sha256sum \
   && sha256sum -c ./openssl-1.1.1a.tar.gz.sha256sum \
-  && sudo -u "${LOGIN_USER}" tar -C ${HOME}/Work -zxpf ./openssl-1.1.1a.tar.gz \
+  && sudo -u "${LOGIN_USER}" tar -C "${HOME}"/Work -zxpf ./openssl-1.1.1a.tar.gz \
   && rm -f ./openssl-1.1.1a.tar.gz*
-WORKDIR ${HOME}/Work/openssl-1.1.1a
+WORKDIR "${HOME}"/Work/openssl-1.1.1a
 RUN set -x \
   && sudo -u "${LOGIN_USER}" ./config --prefix=/opt/local \
   && sudo -u "${LOGIN_USER}" make \
@@ -131,12 +131,12 @@ RUN set -x \
 ### * CheckSum: 1eadd91366cab46767f26e4d10e005198246eac1
 ###   * https://github.com/nttdots/go-dots/blob/6028e68940d7380844e2edfb7bcd5398c7c2e074/README.md
 RUN set -x \
-  && sudo -E -u "${LOGIN_USER}" time /opt/go/bin/go get -u github.com/golang/dep/cmd/dep \
-  && sudo -u "${LOGIN_USER}" mkdir -p ${GOPATH}/src/github.com/influxdata \
-  && sudo -u "${LOGIN_USER}" mkdir -p ${GOPATH}/src/github.com/osrg \
-  && sudo -u "${LOGIN_USER}" mkdir -p ${GOPATH}/src/github.com/obgm \
-  && sudo -u "${LOGIN_USER}" mkdir -p ${GOPATH}/src/github.com/nttdots
-WORKDIR ${GOPATH}/src/github.com/obgm
+  && : sudo -E -u "${LOGIN_USER}" time /opt/go/bin/go get -u github.com/golang/dep/cmd/dep \
+  && : sudo -u "${LOGIN_USER}" mkdir -p "${GOPATH}"/src/github.com/influxdata \
+  && sudo -u "${LOGIN_USER}" mkdir -p "${GOPATH}"/src/github.com/obgm \
+  && sudo -u "${LOGIN_USER}" mkdir -p "${GOPATH}"/src/github.com/osrg \
+  && sudo -u "${LOGIN_USER}" mkdir -p "${GOPATH}"/src/github.com/nttdots
+WORKDIR "${GOPATH}"/src/github.com/obgm
 RUN set -x \
   && sudo -E -u "${LOGIN_USER}" git clone https://github.com/obgm/libcoap.git
 WORKDIR libcoap
@@ -152,58 +152,68 @@ RUN set -x \
   && time make install \
   && ldconfig
 
-## Build gobgp
-## * Tag: v1.33
-WORKDIR ${GOPATH}/src/github.com/influxdata
-RUN set -x \
-  && sudo -E -u "${LOGIN_USER}" git clone https://github.com/influxdata/influxdb.git
-WORKDIR influxdb
-RUN set -x \
-  && : "== influxdb branch 1.8 ==" \
-  && sudo -E -u "${LOGIN_USER}" git checkout remotes/origin/1.8
-WORKDIR ${GOPATH}/src/github.com/osrg
-RUN set -x \
-  && sudo -E -u "${LOGIN_USER}" git clone https://github.com/osrg/gobgp.git
-WORKDIR gobgp
-RUN set -x \
-  && : "== gobgp v1.33 ==" \
-  && sudo -E -u "${LOGIN_USER}" git checkout refs/tags/v1.33 \
-  && sudo -E -u "${LOGIN_USER}" time /opt/go/bin/go get github.com/osrg/gobgp/gobgp \
-  && sudo -E -u "${LOGIN_USER}" time /opt/go/bin/go get github.com/osrg/gobgp/gobgpd
-# && sudo -E -u "${LOGIN_USER}" ${GOPATH}/bin/dep ensure
-
 ## Build go-dots
 ## * Not go get '-u' option
 ## ===========================================================================
+## 
+## 3df3cb1 Merge branch 'develop' of https://github.com/nttdots/dots-go-implementation
+## d113ef7 Support GoBGP Flowspec for handle mitigation request and data channel ACL #164
+## b11974d Fix The block version is not unknown error on Block Transfer #174
+## 76da340 Fix Missing ContentType #176
+## 594e645 Update README.md requirements to match with GoBGP v2.1.0
+## 4a257a7 handle latest GoBGP v2.1.0 #169
+## e59e9ab Implement new draft of Dots Signal Channel Control Filtering #163
 ## d5c0d8b Merge branch 'develop' of https://github.com/nttdots/dots-go-implementation into masterpublic
+## 
 ## ===========================================================================
-WORKDIR ${GOPATH}/src/github.com/nttdots
+WORKDIR "${GOPATH}"/src/github.com/nttdots
 RUN set -x \
   && sudo -E -u "${LOGIN_USER}" git clone https://github.com/nttdots/go-dots
 WORKDIR go-dots
 RUN set -x \
-  && : "== go-dots d5c0d8b ==" \
-  && sudo -E -u "${LOGIN_USER}" git checkout d5c0d8b76ba1d945430b0cbe3c89fc42404737a8 \
+  && : "== go-dots 3df3cb1 ==" \
+  && sudo -E -u "${LOGIN_USER}" git checkout 3df3cb1df83e08503dc916cd20e0b2360f21d01a \
   && sudo -E -u "${LOGIN_USER}" \
     CGO_CFLAGS="-I/opt/local/include" \
     CGO_LDFLAGS="-L/opt/local/lib" \
     time /opt/go/bin/go get github.com/nttdots/go-dots/...
-WORKDIR ${GOPATH}/src/github.com/nttdots/go-dots/mysql_udf
+#WORKDIR "${GOPATH}"/src/github.com/nttdots/go-dots
+WORKDIR "${GOPATH}"/src/github.com/nttdots/go-dots/mysql_udf
 RUN set -x \
   && sudo -u "${LOGIN_USER}" \
     CGO_CFLAGS="-I/opt/local/include" \
     CGO_LDFLAGS="-L/opt/local/lib" \
     time make
-#   && make install 
+# && make install 
 
-# ==
+## Build gobgp
+## * Tag: v2.1.0
+#####WORKDIR "${GOPATH}"/src/github.com/influxdata
+#####RUN set -x \
+#####  && sudo -E -u "${LOGIN_USER}" git clone https://github.com/influxdata/influxdb.git
+#####WORKDIR influxdb
+#####RUN set -x \
+#####  && : "== influxdb branch 1.8 ==" \
+#####  && sudo -E -u "${LOGIN_USER}" git checkout remotes/origin/1.8
+##### WORKDIR "${GOPATH}"/src/github.com/osrg
+##### RUN set -x \
+#####   && sudo -E -u "${LOGIN_USER}" git clone https://github.com/osrg/gobgp.git
+##### WORKDIR gobgp
+RUN set -x \
+  && : "== gobgp v2.1.0 ==" \
+  && sudo -E -u "${LOGIN_USER}" time /opt/go/bin/go get github.com/osrg/gobgp/...
+#####   && sudo -E -u "${LOGIN_USER}" git checkout refs/tags/v2.1.0 \
+#####   && sudo -E -u "${LOGIN_USER}" time /opt/go/bin/go get github.com/osrg/gobgp/gobgp \
+#####   && sudo -E -u "${LOGIN_USER}" time /opt/go/bin/go get github.com/osrg/gobgp/gobgpd
+
+## ===========================================================================
 # https://github.com/docker/for-linux/issues/72
 RUN set -x \
   && : "== [Measures]: MySQL does not start with overlay2 ==" \
   && : "#find /var/lib/mysql -type f -exec touch {} \;" \
   && tar -C /var/lib -zcpf /root/mysqld_datadir_1st.tar.gz ./mysql \
   && chown -R mysql:mysql /var/lib/mysql
-# ==
+## ===========================================================================
 
 COPY ./common/init.sh /opt/local/sbin/
 RUN set -x \
@@ -218,7 +228,7 @@ VOLUME ["/home/${LOGIN_USER}/volume","/var/lib/mysql"]
 WORKDIR "${HOME}"
 
 RUN set -x \
-  && : "== Change ${LOGIN_USER} password ==" \
+  && : "== Change password | User: [${LOGIN_USER}] ==" \
   && echo "${LOGIN_USER}:${LOGIN_USER_PASSWORD}" | chpasswd \
   && { \
     echo "LOGIN_USER_PASSWORD: ${LOGIN_USER_PASSWORD}"; \
