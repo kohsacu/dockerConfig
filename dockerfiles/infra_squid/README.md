@@ -32,10 +32,12 @@ fbcd0e9d52f9        none                null                local
 - image の作成
 
 ```
-$ cd ./dockerfiles
+$ cd ${GIT_LOCAL_REPOSITORY}/dockerfiles
 $ REPOSITORY='infra/squid'; TAG='3.5.27-1'
-$ echo ${REPOSITORY}:${TAG}
+$ SYSLOG_SRV1='192.168.1.2:514'
+$ echo ${REPOSITORY}:${TAG},${SYSLOG_SRV1}
 $ time sudo docker build --tag ${REPOSITORY}:${TAG} \
+> --build-arg SYSLOG_SRV1=${SYSLOG_SRV1} \
 > --file ./infra_squid/Dockerfile .
 
 $ sudo docker image ls
@@ -63,8 +65,10 @@ $ cp -ip ./require/squid.conf ${HOME}/docker.volume/${CONTAINER}/squid.etc/
 
 ```
 $ cd /usr/local/bin
-$ sudo curl -L -O https://github.com/docker/compose/releases/download/1.24.0/docker-compose-$(uname -s)-$(uname -m)
-$ sudo curl -L -O https://github.com/docker/compose/releases/download/1.24.0/docker-compose-$(uname -s)-$(uname -m).sha256
+$ VERSION="1.24.0"
+$ sudo curl --silent --show-error \
+> --location --remote-name https://github.com/docker/compose/releases/download/${VERSION}/docker-compose-$(uname -s)-$(uname -m) \
+> --location --remote-name https://github.com/docker/compose/releases/download/${VERSION}/docker-compose-$(uname -s)-$(uname -m).sha256
 $ sha256sum -c ./docker-compose-$(uname -s)-$(uname -m).sha256
 docker-compose-Linux-x86_64: OK
 $ sudo mv -i ./docker-compose-$(uname -s)-$(uname -m) ./docker-compose
@@ -76,7 +80,7 @@ $ sudo chmod +x ./docker-compose
 - 環境変数
 
 ```
-$ cd ./infra_squid
+$ cd ${GIT_LOCAL_REPOSITORY}/dockerfiles/infra_squid
 $ cp -ip ./.env{.template,}
 $ vim ./.env
 ~
