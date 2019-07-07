@@ -162,6 +162,8 @@ ii  docker-ce-cli                               5:18.09.7~3-0~ubuntu-xenial     
 
 ### 状態確認
 
+#### systemctl
+
 ```bash
 $ systemctl list-units docker.service
 UNIT           LOAD   ACTIVE SUB     DESCRIPTION
@@ -172,7 +174,7 @@ $ systemctl list-unit-files | grep docker.service
 docker.service                             enabled
 ```
 
-### Bridge の状態確認
+#### Bridge の状態確認
 
 ```bash
 $ brctl show
@@ -185,7 +187,7 @@ br_mgmt0		8000.3cd92b5ceb32	no		enp2s0
 docker0			8000.02422d0d0712	no
 ```
 
-### Netfilter の状態確認
+#### Netfilter の状態確認
 
 ```bash
 $ sudo iptables --numeric --verbose --list | grep ^Chain
@@ -224,7 +226,6 @@ Chain INPUT (policy ACCEPT 0 packets, 0 bytes)
 Chain OUTPUT (policy ACCEPT 77 packets, 6789 bytes)
 Chain POSTROUTING (policy ACCEPT 77 packets, 6789 bytes)
 ```
-
 ```bash
 $ sudo iptables-save | sudo tee /etc/iptables/rules.v4_$(date +%Y%m%dT%H%M%S)_docker 1> /dev/null
 $ ls -ltr /etc/iptables/ | tail
