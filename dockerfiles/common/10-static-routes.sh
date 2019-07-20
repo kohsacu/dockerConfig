@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 #/sbin/ip route add 10.32.201.0/24  via NEXT-HOP dev eth1
 #/sbin/ip route add 172.31.11.0/24  via NEXT-HOP dev eth1

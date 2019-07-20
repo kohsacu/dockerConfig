@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 DROPIN_DIR="/home/%%LOGIN_USER%%/volume/init.d"
 
