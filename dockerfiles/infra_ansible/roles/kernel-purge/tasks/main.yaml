@@ -1,0 +1,58 @@
+---
+- name: Catch "dpkg --get-selections"
+  shell: LC_ALL=en_EN.UTF-8 dpkg --get-selections | grep linux-
+  register: _catch_dpkg_get_selections
+  changed_when: False
+  tags: 
+    - check
+
+- name: Print "dpkg --get-selections"
+  debug: var=_catch_dpkg_get_selections.stdout_lines
+  tags: 
+    - check
+
+- name: Catch "uname -r"
+  shell: uname -r
+  register: _catch_uname_r_
+  changed_when: False
+  tags:
+    - check
+
+- name: Print "uname -r"
+  debug: var=_catch_uname_r_.stdout_lines
+  tags: 
+    - check
+
+- name: Catch "dpkg -l purge version"
+  shell: dpkg --get-selections | grep linux- | grep {{ PURGE_VERSION }}
+  register: _catch_purge_version_
+  changed_when: False
+  tags: 
+    - purge
+
+- name: Print "dpkg -l purge version"
+  debug: var=_catch_purge_version_.stdout_lines
+  tags: 
+    - purge
+
+- name: Purge "kernel packages"
+  become: yes
+  apt:
+    name:
+      - linux-*-{{ PURGE_VERSION }}
+      - linux-*-{{ PURGE_VERSION }}-generic
+    state: absent
+    purge: yes
+    #autoremove: yes
+  register: _catch_purge_kernel_packages_
+  tags: 
+    - purge
+
+- name: shell "dpkg -l > .out"
+  shell: LC_ALL=en_EN.UTF-8 dpkg -l > ./dpkg-l_$(hostname -s)_$(date +%Y%m%dT%H%M%S).out
+  args:
+    chdir: ${HOME}/Work/logs
+  when: _catch_purge_kernel_packages_ is changed
+  tags: 
+    - purge
+

@@ -1,0 +1,11 @@
+---
+- name: Catch Hostname
+  command: hostname --fqdn
+  register: result_hostname
+  changed_when: False
+
+- name: Print Hostname
+  #debug: var=result_hostname.stdout_lines
+  debug: var=result_hostname.stdout
+  when: result_hostname is success
+

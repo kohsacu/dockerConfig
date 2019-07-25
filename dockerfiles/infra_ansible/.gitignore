@@ -1,0 +1,6 @@
+/inventories/*
+!/inventories/hosts.ini.template
+/secret.yaml
+/group_vars/*/secret.yaml
+!/group_vars/*/secret.yaml.template
+

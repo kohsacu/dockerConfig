@@ -1,0 +1,18 @@
+---
+- hosts: localhost
+  connection: local
+  tasks:
+  - name: Check "tags"
+    fail: msg="'--tags' is required. $ ansible-playbook --list-tags"
+
+- name: kernel-purge
+  hosts: linux_nodes
+  roles:
+    - kernel-purge
+  vars_prompt:
+    name: PURGE_VERSION
+    prompt: "Please enter Purge version(ex: 4.4.0-123)"
+    private: no
+    confirm: no
+    default: "a.b.c-000"
+
