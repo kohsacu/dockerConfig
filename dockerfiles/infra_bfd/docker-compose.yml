@@ -1,0 +1,176 @@
+version: '3.7'
+
+services:
+    bird-A-0:
+        env_file:
+            - ./.env
+        build:
+            context: .
+            dockerfile: Dockerfile-bird
+            args:
+                - BIRD_BRANCH=${BIRD_BRANCH}
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - ${HOME}/docker.volume/bird-A-0/bird/etc:/opt/bird/etc
+            - ${HOME}/docker.volume/bird-A-0/local/etc:/opt/local/etc
+        image: ${REPOSITORY}:${TAG}
+        container_name: bird-A-0
+        hostname: bird-A-0
+        tty: true
+        logging:
+            driver: "syslog"
+            options:
+                #syslog-address: udp://{{syslog_srv}}:514
+                syslog-facility: "daemon"
+                tag: "{{.DaemonName}}/{{.ImageName}}/{{.Name}}"
+        cap_add:
+            - NET_ADMIN
+        networks:
+            redundant-link:
+                ipv4_address: 203.0.113.18
+            external-link:
+            gwbridge:
+    bird-A-1:
+        env_file:
+            - ./.env
+        build:
+            context: .
+            dockerfile: Dockerfile-bird
+            args:
+                - BIRD_BRANCH=${BIRD_BRANCH}
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - ${HOME}/docker.volume/bird-A-1/bird/etc:/opt/bird/etc
+            - ${HOME}/docker.volume/bird-A-1/local/etc:/opt/local/etc
+        image: ${REPOSITORY}:${TAG}
+        container_name: bird-A-1
+        hostname: bird-A-1
+        tty: true
+        logging:
+            driver: "syslog"
+            options:
+                #syslog-address: udp://{{syslog_srv}}:514
+                syslog-facility: "daemon"
+                tag: "{{.DaemonName}}/{{.ImageName}}/{{.Name}}"
+        cap_add:
+            - NET_ADMIN
+        networks:
+            redundant-link:
+                ipv4_address: 203.0.113.19
+            external-link:
+            gwbridge:
+    bird-B-0:
+        env_file:
+            - ./.env
+        build:
+            context: .
+            dockerfile: Dockerfile-bird
+            args:
+                - BIRD_BRANCH=${BIRD_BRANCH}
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - ${HOME}/docker.volume/bird-B-0/bird/etc:/opt/bird/etc
+            - ${HOME}/docker.volume/bird-B-0/local/etc:/opt/local/etc
+        image: ${REPOSITORY}:${TAG}
+        container_name: bird-B-0
+        hostname: bird-B-0
+        tty: true
+        logging:
+            driver: "syslog"
+            options:
+                #syslog-address: udp://{{syslog_srv}}:514
+                syslog-facility: "daemon"
+                tag: "{{.DaemonName}}/{{.ImageName}}/{{.Name}}"
+        cap_add:
+            - NET_ADMIN
+        networks:
+            redundant-link:
+                ipv4_address: 203.0.113.28
+            internal-link:
+            gwbridge:
+    bird-B-1:
+        env_file:
+            - ./.env
+        build:
+            context: .
+            dockerfile: Dockerfile-bird
+            args:
+                - BIRD_BRANCH=${BIRD_BRANCH}
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - ${HOME}/docker.volume/bird-B-1/bird/etc:/opt/bird/etc
+            - ${HOME}/docker.volume/bird-B-1/local/etc:/opt/local/etc
+        image: ${REPOSITORY}:${TAG}
+        container_name: bird-B-1
+        hostname: bird-B-1
+        tty: true
+        logging:
+            driver: "syslog"
+            options:
+                #syslog-address: udp://{{syslog_srv}}:514
+                syslog-facility: "daemon"
+                tag: "{{.DaemonName}}/{{.ImageName}}/{{.Name}}"
+        cap_add:
+            - NET_ADMIN
+        networks:
+            redundant-link:
+                ipv4_address: 203.0.113.29
+            internal-link:
+            gwbridge:
+    bird-gobgp:
+        env_file:
+            - ./.env
+        build:
+            context: .
+            dockerfile: Dockerfile-gobgp
+            args:
+                - GOBGP_BRANCH=${GOBGP_BRANCH}
+                - GO_VERSION=${GO_VERSION}
+                - GO_SHA256_CHECKSUM=${GO_SHA256_CHECKSUM}
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - ${HOME}/docker.volume/bird-gobgp/go/etc:/root/go/etc
+            - ${HOME}/docker.volume/bird-gobgp/local/etc:/opt/local/etc
+        image: ${GOBGP_REPOSITORY}:${GOBGP_TAG}
+        container_name: bird-gobgp
+        hostname: bird-gobgp
+        tty: true
+        logging:
+            driver: "syslog"
+            options:
+                #syslog-address: udp://{{syslog_srv}}:514
+                syslog-facility: "daemon"
+                tag: "{{.DaemonName}}/{{.ImageName}}/{{.Name}}"
+        cap_add:
+            - NET_ADMIN
+        networks:
+            redundant-link:
+                ipv4_address: 203.0.113.25
+            gwbridge:
+
+networks:
+    external-link:
+        name: bfd-external
+        driver: bridge
+        ipam:
+            driver: default
+            config:
+                - subnet: "203.0.113.32/28"
+    internal-link:
+        name: bfd-internal
+        driver: bridge
+        ipam:
+            driver: default
+            config:
+                - subnet: "203.0.113.48/28"
+    redundant-link:
+        name: bfd-redundant
+        driver: bridge
+        ipam:
+            driver: default
+            config:
+                - subnet: "203.0.113.16/28"
+    gwbridge:
+        external:
+            name: docker_gwbridge
+
