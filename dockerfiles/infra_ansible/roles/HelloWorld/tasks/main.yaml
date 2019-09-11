@@ -1,0 +1,4 @@
+---
+- name: Test ansible-playbook
+  debug: msg="Hello world!"
+

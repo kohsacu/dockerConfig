@@ -1,0 +1,39 @@
+---
+- name: Update "apt cache"
+  become: yes
+  apt:
+    update_cache: yes
+  tags: 
+    - check
+    - upgrade
+
+- name: Catch "apt-get upgrade"
+  become: yes
+  shell: LC_ALL=en_EN.UTF-8 DEBIAN_FRONTEND=noninteractive apt-get upgrade -s
+  register: _catch_update_packages_
+  changed_when: False
+  tags: 
+    - check
+
+- name: Print "apt-get upgrade"
+  debug: var=_catch_update_packages_.stdout_lines
+  #debug: var=_catch_update_packages_.stdout
+  #when: _catch_update_packages_ is success
+  tags: 
+    - check
+
+- name: Upgrade "apt packages"
+  become: yes
+  apt:
+    upgrade: safe
+  register: _catch_apt_upgrade_
+  tags: 
+    - upgrade
+
+- name: shell "dpkg -l > .out"
+  shell: LC_ALL=en_EN.UTF-8 dpkg -l > ./dpkg-l_$(hostname -s)_$(date +%Y%m%dT%H%M%S).out
+  args:
+    chdir: ${HOME}/Work/logs
+  when: _catch_apt_upgrade_ is changed
+  tags: 
+    - upgrade

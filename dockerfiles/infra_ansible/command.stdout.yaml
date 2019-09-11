@@ -1,0 +1,8 @@
+---
+- name: command.stdout
+  hosts: linux_nodes
+  roles:
+    - command.stdout
+  #vars_files:
+  #  - secret.yaml
+
