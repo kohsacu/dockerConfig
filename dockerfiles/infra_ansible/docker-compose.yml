@@ -1,0 +1,54 @@
+version: '3.7'
+
+#
+# [docker-compose.yaml](https://qiita.com/m0559reen/items/d593c526af64c29293f5#docker-composeyaml)
+#
+
+services:
+    ansible:
+        env_file:
+            - ./.env
+        build:
+            context: ./Dockerfiles
+            dockerfile: Dockerfile
+            args:
+                - ANSIBLE_VERSION=${ANSIBLE_VERSION}
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - ./:/var/tmp/ansible
+        image: ${REPOSITORY}:${TAG}
+        tty: true
+        logging:
+            driver: "syslog"
+            options:
+                #syslog-address: udp://{{syslog_srv}}:514
+                syslog-facility: "daemon"
+                tag: "{{.DaemonName}}/{{.ImageName}}/{{.Name}}"
+        #cap_add:
+        #    - NET_ADMIN
+        network_mode: "bridge"
+    ansible-playbook:
+        env_file:
+            - ./.env
+        build:
+            context: ./Dockerfiles
+            dockerfile: Dockerfile
+            args:
+                - ANSIBLE_VERSION=${ANSIBLE_VERSION}
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - ./:/var/tmp/ansible
+        image: ${REPOSITORY}:${TAG}
+        tty: true
+        logging:
+            driver: "syslog"
+            options:
+                #syslog-address: udp://{{syslog_srv}}:514
+                syslog-facility: "daemon"
+                tag: "{{.DaemonName}}/{{.ImageName}}/{{.Name}}"
+        #cap_add:
+        #    - NET_ADMIN
+        network_mode: "bridge"
+        entrypoint:
+            - ansible-playbook
+

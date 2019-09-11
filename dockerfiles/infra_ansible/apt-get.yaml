@@ -1,0 +1,12 @@
+---
+- hosts: localhost
+  connection: local
+  tasks:
+  - name: Check "tags"
+    fail: msg="'--tags' is required. $ ansible-playbook --list-tags"
+
+- name: apt-get
+  hosts: linux_nodes
+  roles:
+    - apt-get
+
