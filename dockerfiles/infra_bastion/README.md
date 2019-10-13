@@ -20,46 +20,27 @@
 ### 構成図
 
 ```
-                                                 +---------------+
- ~~~~~~~~~~~~~~               +-----+            |  Docker host  |
-(              )              |     |            |  +---------+  |
-( The Internet )--(Hi Port)-->+ CPE +--(22)--+-->+  | Bastion |  |
-(              )              |     |        |   |  +---------+  |
- ~~~~~~~~~~~~~~               +-----+        |   |               |
-                                             |   +---------------+
-                                             |
-                                             |   +------------+
-                                             +---| Other host |--+
-                                                 +------------+  |--+
-                                                    +------------+  |
-                                                       +------------+
+                                                      +---------------+
+ ~~~~~~~~~~~~~~               +-----+                 |  Docker host  |
+(              )              |     |                 |  +---------+  |
+( The Internet )--(Hi Port)-->+ CPE +--(publish)--+-->+  | Bastion |  |
+(              )              |     |             |   |  +---------+  |
+ ~~~~~~~~~~~~~~               +-----+             |   |               |
+                                                  |   +---------------+
+                                                  |
+                                                  |   +------------+
+                                                  +---| Other host |--+
+                                                      +------------+  |--+
+                                                         +------------+  |
+                                                            +------------+
 ```
 
 ### Docker Network
 
 - 前提
-  - CPE は任意の Hi Port を Bastion コンテナの 22/tcp へ Port Mapping する事が出来る
-  - Docker hoｓｔ と Other host は IP リーチャビリティがある
-  - Docker hoｓｔ の CPE 側 IF は Linux Bridge にて接続されている(後述 `br_mgmt0`)
-
-- Docker Network の作成
-  - 192.168.1.0/24: Docker ホスト自身が収容されているネットワーク
-  - 192.168.1.3: Docker ホスト自身
-  - br_mgmt0: 既存の Bridge
-
-```bash
-$ sudo docker network create --driver bridge \
-> --subnet 192.168.1.0/24 --gateway 192.168.1.3 \
-> --opt "com.docker.network.bridge.name"="br_mgmt0" br-mgmt0
-6d69ddbd8948bbb94fa3c444346f4d7e2e34f918ea77dbfc29ffabd7cf774404
-
-$ sudo docker network ls
-NETWORK ID          NAME                DRIVER              SCOPE
-6d69ddbd8948        br-mgmt0            bridge              local # ←(※)
-a6e23c938e6c        bridge              bridge              local
-5a41f95148fe        host                host                local
-fbcd0e9d52f9        none                null                local
-```
+  - CPE は任意の Hi Port を Docker host の publish port へ Port Mapping する事が出来る
+  - Docker host と Other host は IP リーチャビリティがある
+  - Docker host の CPE 側 IF は Linux Bridge にて接続されている(`docker0`)
 
 ## build
 
@@ -73,14 +54,13 @@ $ cp -ip .env{.template,}
 $ vim .env
 ~
 REPOSITORY=infra/bastion
-TAG=3.10.1-1
+TAG=3.10.2-1
 CONTAINER=bastion01
-IPV4_ADDRESS=192.168.1.5
-IPV4_SUBNET=192.168.1.0/24
 LOGIN_UID=1000
 LOGIN_GID=1000
 LOGIN_USER=alpine
 LOGIN_USER_PASSWORD=alpine!1234
+PUBLICH_SSH=65422
 ~
 :wq
 ```
@@ -146,7 +126,7 @@ ssh-keygen: generating new host keys: RSA DSA ECDSA ED25519
 ```bash
 $ sudo docker container exec -it --user=${LOGIN_UID}:${LOGIN_GID} ${CONTAINER} ash
 ```
-- ssh-keygen
+- ssh-keygen @ docker host
 ```bash
 $ SSH_KEY="${HOME}/.ssh/id_ed25519_${LOGIN_USER}.pem"
 $ ssh-keygen -m PEM -t ed25519 -C "${LOGIN_USER}@docker-container.local" -P "${LOGIN_USER_PASSWORD}" -f "${SSH_KEY}"
@@ -156,7 +136,7 @@ $ ssh-keygen -m PEM -t ed25519 -C "${LOGIN_USER}@docker-container.local" -P "${L
 $ sudo docker cp ${SSH_KEY}.pub ${CONTAINER}:/home/${LOGIN_USER}/.ssh/authorized_keys
 $ sudo docker container exec -it --user=1000:1000 ${CONTAINER} ash -c 'ls -ln .ssh/authorized_keys'
 -rw-r--r--    1 1000     1000           105 Jul 14 13:35 .ssh/authorized_keys
-$ ssh -l bastion -i ${SSH_KEY} 192.168.1.5
+$ ssh -l alpine -i ${SSH_KEY} 172.17.0.2
 Are you sure you want to continue connecting (yes/no)? yes
 Enter passphrase for key '${HOME}/.ssh/id_ed25519.${CONTAINER}_${LOGIN_USER}.pem':
 ```
@@ -182,6 +162,6 @@ Jul 14 18:32:05 docker-host docker/infra/bastion:0.1/bastion04[5427]: Disconnect
 bastion01:~$ ps aux | grep sshd
 bastion01:~$ sudo ls -la /root
 bastion01:~$ exit
-container-host:~$ ssh -l bastion 192.168.1.5
+container-host:~$ ssh -l bastion 172.17.0.2
 Permission denied (publickey,keyboard-interactive).
 ```
