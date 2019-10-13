@@ -71,3 +71,7 @@ Please enter Purge version(ex: 4.4.0-123) [a.b.c-000]: [Return]
 $ sudo docker-compose run --rm ansible-playbook -i ./inventories/hosts.ini ./kernel-purge.yaml --tags=purge
 Please enter Purge version(ex: 4.4.0-123) [a.b.c-000]: 4.4.0-150
 ```
+- OneShot
+```bash
+$ sudo docker-compose run --rm ansible -i ./inventories/hosts.ini linux_nodes -m shell -a "LC_ALL=C ls -al /root" --become
+```
