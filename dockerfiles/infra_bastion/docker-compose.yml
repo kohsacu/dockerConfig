@@ -1,9 +1,5 @@
 version: '3.7'
 
-# == Docker network ==
-# $ sudo docker network create --driver bridge \
-# > --subnet 192.168.1.0/24 --gateway 192.168.1.2 \
-# > --opt "com.docker.network.bridge.name"="br_mgmt0" br-mgmt0
 services:
     ssh-bastion:
         env_file:
@@ -32,19 +28,7 @@ services:
                 #syslog-address: udp://192.168.1.2:514
                 syslog-facility: "daemon"
                 tag: "{{.DaemonName}}/{{.ImageName}}/{{.Name}}"
-        cap_add:
-            - NET_ADMIN
-        networks:
-            br-mgmt0:
-                ipv4_address: ${IPV4_ADDRESS}
-networks:
-    br-mgmt0:
-        external: true
-        driver: bridge
-        driver_opts:
-            com.docker.network.bridge.name: br_mgmt0
-        ipam:
-            driver: default
-            config:
-                - subnet: ${IPV4_SUBNET}
+        ports:
+            - "${PUBLIC_SSH}:22"
+        network_mode: "bridge"
 
