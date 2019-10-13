@@ -1,11 +1,12 @@
 FROM ubuntu:18.04
 
-LABEL maintainer="Kohsacu"
+LABEL maintainer="Kohsacu <kohsacu@email.local>" \
+      local.kohsacu.base.image.source=https://github.com/kohsacu/dockerConfig.git
 
 #USER root
 
 ARG SQUID_VERSION="3.5.27"
-ARG SYSLOG_SRV1="192.168.1.2:514"
+ARG SYSLOG_SRV1="172.17.0.1:514"
 ENV SQUID_VERSION="${SQUID_VERSION}" \
     SQUID_CACHE_DIR="/var/spool/squid" \
     SQUID_LOG_DIR="/var/log/squid" \
@@ -32,12 +33,12 @@ RUN set -x \
     echo "include /opt/local/etc/squid/*.conf"; \
   } | tee /etc/squid/squid.conf
 
-COPY ./require/rsyslog.d/squid/20-transfer.conf /etc/rsyslog.d/20-transfer.conf
+COPY ./20-transfer.conf /etc/rsyslog.d/20-transfer.conf
 RUN set -x \
   && : "== Edit syslog output ==" \
   && sed -i -e "s/%%SYSLOG_SRV1%%/${SYSLOG_SRV1}/" /etc/rsyslog.d/20-transfer.conf
 
-COPY ./common/init.sh /sbin/entrypoint.sh
+COPY ./init.sh /sbin/entrypoint.sh
 RUN set -x \
   && : "== Add ENTRYPOINT script ==" \
   && sed -i -e "s:/home/%%LOGIN_USER%%/volume:/opt/local/etc:" /sbin/entrypoint.sh \

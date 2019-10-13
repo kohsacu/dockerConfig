@@ -1,29 +1,15 @@
 version: "3.7"
 
-# 
-# $ sudo CONTAINER='squid01' REPOSITORY='infra/squid' TAG='3.5.27-1' \
-# > IPV4_ADDRESS='192.168.1.5' IPV4_SUBNET='192.168.1.0/24' \
-# > docker-compose up -d
-# Creating squid01 ... done
-# 
-# $ sudo CONTAINER='squid01' docker-compose ps
-#  Name           Command         State   Ports
-#  ---------------------------------------------
-#  squid01   /sbin/entrypoint.sh   Up    
-# 
-# $ sudo CONTAINER='squid01' docker-compose down
-# Stopping squid01 ... done
-# Removing squid01 ... done
-# Network br-mgmt0 is external, skipping
-# 
-
 services:
     http-proxy:
         env_file:
             - ./.env
-        #build:
-        #    context: ./infra_squid
-        #    dockerfile: Dockerfile
+        build:
+            context: .
+            dockerfile: Dockerfile
+            args:
+                - SQUID_VERSION=${SQUID_VERSION}
+                - SYSLOG_SRV1=${SYSLOG_SRV1}
         container_name: ${CONTAINER}
         hostname: ${CONTAINER}
         image: ${REPOSITORY}:${TAG}
@@ -36,20 +22,9 @@ services:
         logging:
             driver: "syslog"
             options:
-                #syslog-address: udp://192.168.1.2:514
+                #syslog-address: udp://172.17.0.1:514
                 syslog-facility: "daemon"
                 tag: "{{.DaemonName}}/{{.ImageName}}/{{.Name}}"
-        networks:
-            br-mgmt0:
-                ipv4_address: ${IPV4_ADDRESS}
-networks:
-    br-mgmt0:
-        external: true
-        driver: bridge
-        driver_opts:
-            com.docker.network.bridge.name: br_mgmt0
-        ipam:
-            driver: default
-            config:
-                - subnet: ${IPV4_SUBNET}
-
+        ports:
+            - "${PUBLIC_SQUID}:3128"
+        network_mode: "bridge"
