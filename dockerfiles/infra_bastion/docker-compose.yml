@@ -29,6 +29,6 @@ services:
                 syslog-facility: "daemon"
                 tag: "{{.DaemonName}}/{{.ImageName}}/{{.Name}}"
         ports:
-            - "${PUBLICH_SSH}:22"
+            - "${PUBLIC_SSH}:22"
         network_mode: "bridge"
 
