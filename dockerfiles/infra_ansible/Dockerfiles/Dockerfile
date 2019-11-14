@@ -23,8 +23,8 @@ RUN set -x \
   && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 93C4A3FD7BB9C367 \
   && apt-key list \
   && { \
-    echo "deb http://ppa.launchpad.net/ansible/ansible/ubuntu bionic main"; \
-    echo "deb-src http://ppa.launchpad.net/ansible/ansible/ubuntu bionic main"; \
+    echo "deb http://ppa.launchpad.net/ansible/ansible-2.8/ubuntu bionic main"; \
+    echo "deb-src http://ppa.launchpad.net/ansible/ansible-2.8/ubuntu bionic main"; \
   } | tee /etc/apt/sources.list.d/ansible.list \
   && apt-get update \
   && apt-get install -y \
