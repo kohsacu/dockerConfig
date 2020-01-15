@@ -26,9 +26,12 @@ services:
         cap_add:
             - NET_ADMIN
         networks:
-            redundant-link:
-                ipv4_address: 203.0.113.18
-            external-link:
+            redundant-link0:
+                ipv4_address: 10.10.20.10
+            redundant-link1:
+                ipv4_address: 10.10.21.10
+            external-link0:
+                ipv4_address: 10.10.30.10
             gwbridge:
     bird-A-1:
         env_file:
@@ -55,9 +58,12 @@ services:
         cap_add:
             - NET_ADMIN
         networks:
-            redundant-link:
-                ipv4_address: 203.0.113.19
-            external-link:
+            redundant-link0:
+                ipv4_address: 10.10.20.11
+            redundant-link1:
+                ipv4_address: 10.10.21.11
+            external-link1:
+                ipv4_address: 10.10.31.11
             gwbridge:
     bird-B-0:
         env_file:
@@ -84,9 +90,10 @@ services:
         cap_add:
             - NET_ADMIN
         networks:
-            redundant-link:
-                ipv4_address: 203.0.113.28
+            redundant-link0:
+                ipv4_address: 10.10.20.20
             internal-link:
+                ipv4_address: 10.10.40.20
             gwbridge:
     bird-B-1:
         env_file:
@@ -113,9 +120,10 @@ services:
         cap_add:
             - NET_ADMIN
         networks:
-            redundant-link:
-                ipv4_address: 203.0.113.29
+            redundant-link1:
+                ipv4_address: 10.10.21.21
             internal-link:
+                ipv4_address: 10.10.40.21
             gwbridge:
     bird-gobgp:
         env_file:
@@ -144,32 +152,104 @@ services:
         cap_add:
             - NET_ADMIN
         networks:
-            redundant-link:
-                ipv4_address: 203.0.113.25
+            redundant-link0:
+                ipv4_address: 10.10.20.40
+            redundant-link1:
+                ipv4_address: 10.10.21.40
+            gwbridge:
+    ToR-0:
+        env_file:
+            - ./.env
+        build:
+            context: .
+            dockerfile: Dockerfile-bird
+            args:
+                - BIRD_BRANCH=${BIRD_BRANCH}
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - ${HOME}/docker.volume/bird-ToR-0/bird/etc:/opt/bird/etc
+            - ${HOME}/docker.volume/bird-ToR-0/local/etc:/opt/local/etc
+        image: ${REPOSITORY}:${TAG}
+        container_name: ToR-0
+        hostname: ToR-0
+        tty: true
+        logging:
+            driver: "syslog"
+            options:
+                #syslog-address: udp://{{syslog_srv}}:514
+                syslog-facility: "daemon"
+                tag: "{{.DaemonName}}/{{.ImageName}}/{{.Name}}"
+        cap_add:
+            - NET_ADMIN
+        networks:
+            external-link0:
+                ipv4_address: 10.10.30.30
+            gwbridge:
+    ToR-1:
+        env_file:
+            - ./.env
+        build:
+            context: .
+            dockerfile: Dockerfile-bird
+            args:
+                - BIRD_BRANCH=${BIRD_BRANCH}
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - ${HOME}/docker.volume/bird-ToR-1/bird/etc:/opt/bird/etc
+            - ${HOME}/docker.volume/bird-ToR-1/local/etc:/opt/local/etc
+        image: ${REPOSITORY}:${TAG}
+        container_name: ToR-1
+        hostname: ToR-1
+        tty: true
+        logging:
+            driver: "syslog"
+            options:
+                #syslog-address: udp://{{syslog_srv}}:514
+                syslog-facility: "daemon"
+                tag: "{{.DaemonName}}/{{.ImageName}}/{{.Name}}"
+        cap_add:
+            - NET_ADMIN
+        networks:
+            external-link1:
+                ipv4_address: 10.10.31.30
             gwbridge:
 
 networks:
-    external-link:
-        name: bfd-external
+    redundant-link0:
+        name: bfd-redundant0
         driver: bridge
         ipam:
             driver: default
             config:
-                - subnet: "203.0.113.32/28"
+                - subnet: "10.10.20.0/24"
+    redundant-link1:
+        name: bfd-redundant1
+        driver: bridge
+        ipam:
+            driver: default
+            config:
+                - subnet: "10.10.21.0/24"
+    external-link0:
+        name: bfd-external0
+        driver: bridge
+        ipam:
+            driver: default
+            config:
+                - subnet: "10.10.30.0/24"
+    external-link1:
+        name: bfd-external1
+        driver: bridge
+        ipam:
+            driver: default
+            config:
+                - subnet: "10.10.31.0/24"
     internal-link:
         name: bfd-internal
         driver: bridge
         ipam:
             driver: default
             config:
-                - subnet: "203.0.113.48/28"
-    redundant-link:
-        name: bfd-redundant
-        driver: bridge
-        ipam:
-            driver: default
-            config:
-                - subnet: "203.0.113.16/28"
+                - subnet: "10.10.40.0/24"
     gwbridge:
         external:
             name: docker_gwbridge
