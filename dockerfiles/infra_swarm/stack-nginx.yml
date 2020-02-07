@@ -1,0 +1,15 @@
+version: '3.7'
+
+services:
+  nginx:
+    image: nginx
+    #image: httpd
+    ports:
+    - target: 80
+      published: 19001
+      protocol: tcp
+      mode: ingress
+    deploy:
+      mode: replicated
+      replicas: 4   # コンテナの個数
+

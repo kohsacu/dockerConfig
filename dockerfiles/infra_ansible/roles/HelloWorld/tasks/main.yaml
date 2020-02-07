@@ -2,3 +2,13 @@
 - name: Test ansible-playbook
   debug: msg="Hello world!"
 
+- name: Catch Hostname
+  command: hostname --fqdn
+  register: _result_hostname_
+  changed_when: False
+
+- name: Print Hostname
+  #debug: var=_result_hostname_.stdout_lines
+  debug: var=_result_hostname_.stdout
+  when: _result_hostname_ is success
+

@@ -1,0 +1,12 @@
+---
+- hosts: localhost
+  connection: local
+  tasks:
+  - name: Check "tags"
+    fail: msg="'--tags' is required. $ ansible-playbook --list-tags"
+
+- name: base-config
+  hosts: linux_nodes
+  roles:
+    - base-config
+
