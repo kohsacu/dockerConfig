@@ -1,0 +1,30 @@
+---
+- name: Join to docker group
+  #
+  # - gpasswd [--add USER] GROUP
+  #
+  become: yes
+  user:
+    name: "{{ item }}"
+    append: True
+    groups: docker  # Supplementary groups
+    state: present  # Append
+  tags:
+    - group_docker-join
+  with_items:
+    - "{{ ansible_ssh_user }}"
+
+- name: Check docker group
+  shell: grep docker /etc/group
+  register: _catch_docker_group_
+  changed_when: False
+  tags:
+    - group_docker-check
+    - group_docker-join
+
+- name: Print docker group
+  debug: var=_catch_docker_group_.stdout_lines
+  tags:
+    - group_docker-check
+    - group_docker-join
+

@@ -1,0 +1,33 @@
+version: '3.7'
+
+services:
+    base-ubu1804:
+        env_file:
+            - ./.env
+        build:
+            context: .
+            dockerfile: Dockerfile
+            args:
+                - LOGIN_UID=${LOGIN_UID}
+                - LOGIN_GID=${LOGIN_GID}
+                - LOGIN_USER=${LOGIN_USER}
+                - LOGIN_USER_PASSWORD=${LOGIN_USER_PASSWORD}
+                - CONTAINER=${CONTAINER}
+                - ADD_LOCALE=${ADD_LOCALE}
+                - SET_LOCALE=${SET_LOCALE}
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - ${HOME}/docker.volume/${CONTAINER}:/home/${LOGIN_USER}/volume
+        container_name: ${CONTAINER}
+        hostname: ${CONTAINER}
+        image: ${REPOSITORY}:${TAG}
+        #restart: always
+        tty: true
+        logging:
+            driver: "syslog"
+            options:
+                #syslog-address: udp://192.168.1.2:514
+                syslog-facility: "daemon"
+                tag: "{{.DaemonName}}/{{.ImageName}}/{{.Name}}"
+        network_mode: "bridge"
+
