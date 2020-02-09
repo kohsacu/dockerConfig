@@ -9,16 +9,16 @@ services:
             dockerfile: Dockerfile
             args:
                 - SQUID_VERSION=${SQUID_VERSION}
-                - SYSLOG_SRV1=${SYSLOG_SRV1}
         container_name: ${CONTAINER}
         hostname: ${CONTAINER}
         image: ${REPOSITORY}:${TAG}
         restart: always
+        tty: true
         volumes:
             - /etc/localtime:/etc/localtime:ro
-            - ${HOME}/docker.volume/${CONTAINER}/init.d:/opt/local/etc/init.d
-            - ${HOME}/docker.volume/${CONTAINER}/squid.etc:/opt/local/etc/squid
-            - ${HOME}/docker.volume/${CONTAINER}/squid.spool:/var/spool/squid
+            - /opt/docker.volume/${CONTAINER}/init.d:/opt/local/etc/init.d
+            - /opt/docker.volume/${CONTAINER}/squid.etc:/opt/local/etc/squid
+            - /opt/docker.volume/${CONTAINER}/squid.spool:/var/spool/squid
         logging:
             driver: "syslog"
             options:
