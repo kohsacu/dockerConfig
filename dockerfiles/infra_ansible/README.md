@@ -180,14 +180,34 @@ localhost                  : ok=1    changed=0    unreachable=0    failed=0    s
 
 ```bash
 $ sudo docker-compose run --rm ansible-playbook -i ./inventories/hosts.ini ./kernel-purge.yaml --tags=check
+
+PLAY [localhost] ********************************************************************************************
+
+TASK [Gathering Facts] **************************************************************************************
+ok: [localhost]
 Please enter Purge version(ex: 4.4.0-123) [a.b.c-000]: [Return]
+(..snip..)
 ```
 
 - `$ apt-get remove --purge linux-*-{{ PURGE_VERSION }} linux-*-{{ PURGE_VERSION }}-generic`
 
 ```bash
 $ sudo docker-compose run --rm ansible-playbook -i ./inventories/hosts.ini ./kernel-purge.yaml --tags=purge
+
+PLAY [localhost] ********************************************************************************************
+
+TASK [Gathering Facts] **************************************************************************************
+ok: [localhost]
 Please enter Purge version(ex: 4.4.0-123) [a.b.c-000]: <purge_version>
+(..snip..)
+```
+or
+```bash
+$ sudo docker-compose run --rm ansible-playbook -i ./inventories/hosts.ini ./kernel-purge.yaml --tags=purge \
+> --extra-vars="PURGE_VERSION=4.4.0-123"
+
+PLAY [localhost] ********************************************************************************************
+(..snip..)
 ```
 
 ## OneShot
