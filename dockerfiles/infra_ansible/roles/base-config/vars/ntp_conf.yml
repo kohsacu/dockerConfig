@@ -1,0 +1,10 @@
+---
+#
+# $ ANSIBLE_NTP_SRVS="100.127.255.123, 192.0.2.123, 198.51.100.123, 203.0.113.123"
+# $ [ -z ${ANSIBLE_NTP_SRVS// //} ] || for i in $(echo ${ANSIBLE_NTP_SRVS} | sed -e 's/,/ /g')
+# > do
+# >   echo "  - ${i}"
+# > done | tee -a ./roles/base-config/vars/ntp_conf.yml
+#
+servers:
+  - 127.127.1.0

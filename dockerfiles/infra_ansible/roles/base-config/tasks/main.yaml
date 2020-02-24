@@ -28,3 +28,90 @@
     - group_docker-check
     - group_docker-join
 
+- name: Restrict sudoers
+  #
+  # - visudo --file %s
+  #
+  become: yes
+  template:
+    src: templates/sudoers.d/92-host-security.j2
+    dest: /etc/sudoers.d/92-host-security
+    owner: root
+    group: root
+    mode: '0440'
+    validate: /usr/sbin/visudo --check --file %s
+  tags:
+    - security_append
+
+- name: Check sudoers
+  become: yes
+  shell: cat /etc/sudoers.d/92-host-security
+  register: _catch_92_host_security_
+  changed_when: False
+  tags:
+    - security_check
+    - security_append
+
+- name: Print sudoers
+  debug: var=_catch_92_host_security_.stdout_lines
+  tags:
+    - security_check
+    - security_append
+
+- name: Include vars of include_vars.yml into the 'ntp_conf' variable
+  include_vars:
+    #file: include_vars.yml
+    file: ntp_conf.yml
+    name: ntp_conf
+  tags:
+    - security_append
+
+- name: Config ntp
+  become: yes
+  template:
+    src: templates/chrony/chrony.conf.j2
+    dest: /etc/chrony/chrony.conf
+    owner: root
+    group: root
+    mode: '0644'
+  tags:
+    - security_append
+
+- name: Check chrony.conf
+  shell: grep ^server /etc/chrony/chrony.conf
+  register: _catch_chrony_conf_
+  changed_when: False
+  tags:
+    - security_check
+    - security_append
+
+- name: Print chrony.conf
+  debug: var=_catch_chrony_conf_.stdout_lines
+  tags:
+    - security_check
+    - security_append
+
+- name: Restart and Enable 'chrony.service'
+  become: yes
+  systemd:
+    name: chrony.service
+    state: restarted
+    enabled: yes
+    daemon_reload: no
+  tags:
+    - security_append
+
+- name: Check current time sources that chronyd is accessing.
+  shell: chronyc -n sources
+  register: _catch_chronyc_sources_
+  changed_when: False
+  tags:
+    - security_check
+    - security_append
+
+- name: Print current time sources that chronyd is accessing.
+  debug: var=_catch_chronyc_sources_.stdout_lines
+  tags:
+    - security_check
+    - security_append
+
