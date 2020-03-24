@@ -1,0 +1,13 @@
+#
+# roles/base-config/templates/sudoers.d/91-host-security.j2
+#
+
+Cmnd_Alias SU     = /bin/su
+Cmnd_Alias ADMCMD = /usr/sbin/visudo
+#Cmnd_Alias ADMCMD = /usr/sbin/visudo, /usr/sbin/netplan
+#Cmnd_Alias ALLOWCMND = /usr/sbin/
+
+# User rules for "{{ ansible_ssh_user }}"
+{{ ansible_ssh_user }} ALL=(ALL) !SU, !ADMCMD
+#%sudo ALL=(ALL) !SU, !ADMCMD
+
