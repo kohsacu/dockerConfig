@@ -16,9 +16,9 @@ services:
         tty: true
         volumes:
             - /etc/localtime:/etc/localtime:ro
-            - /opt/docker.volume/${CONTAINER}/init.d:/opt/local/etc/init.d
-            - /opt/docker.volume/${CONTAINER}/squid.etc:/opt/local/etc/squid
-            - /opt/docker.volume/${CONTAINER}/squid.spool:/var/spool/squid
+            - ${PATH_DOCKER_VOLUME}/${CONTAINER}/init.d:/opt/local/etc/init.d
+            - ${PATH_DOCKER_VOLUME}/${CONTAINER}/squid.etc:/opt/local/etc/squid
+            - ${PATH_DOCKER_VOLUME}/${CONTAINER}/squid.spool:/var/spool/squid
         logging:
             driver: "syslog"
             options:
@@ -26,5 +26,5 @@ services:
                 syslog-facility: "daemon"
                 tag: "{{.DaemonName}}/{{.ImageName}}/{{.Name}}"
         ports:
-            - "${PUBLIC_SQUID}:3128"
+            - "${SQUID_PUBLIC}:3128"
         network_mode: "bridge"

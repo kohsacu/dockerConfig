@@ -7,7 +7,8 @@ ARG SQUID_VERSION="3.5.27"
 ENV SQUID_VERSION="${SQUID_VERSION}" \
     SQUID_CACHE_DIR="/var/spool/squid" \
     SQUID_LOG_DIR="/var/log/squid" \
-    SQUID_USER="proxy"
+    SQUID_USER="proxy" \
+    SQUID_EXTRA_ARGS="${SQUID_EXTRA_ARGS}"
 
 # Write it in "1 line 1 package" "alphabetical order" for review.
 RUN set -x \
