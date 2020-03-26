@@ -13,10 +13,10 @@
 
 ```bash
 $ . .env
-$ sudo mkdir -p /opt/docker.volume/${CONTAINER}/{init.d,squid.etc,squid.spool}
-$ sudo chown -R 1000:1000 /opt/docker.volume/${CONTAINER}
-$ cp -ip ../require/50-squid.sh /opt/docker.volume/${CONTAINER}/init.d/
-$ cp -ip ./squid.conf /opt/docker.volume/${CONTAINER}/squid.etc/
+$ sudo mkdir -p ${PATH_DOCKER_VOLUME}/${CONTAINER}/{init.d,squid.etc,squid.spool}
+$ sudo chown -R 1000:1000 ${PATH_DOCKER_VOLUME}/${CONTAINER}
+$ cp -ip ../require/50-squid.sh ${PATH_DOCKER_VOLUME}/${CONTAINER}/init.d/
+$ cp -ip ./squid.conf ${PATH_DOCKER_VOLUME}/${CONTAINER}/squid.etc/
 ```
 
 - rsyslogd(ホスト)

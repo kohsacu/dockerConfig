@@ -35,5 +35,5 @@ echo "Starting squid..."
 #        -s | -l facility
 #        -f file   Use given config-file instead of
 exec $(which squid) -YCNd 1 -f /etc/squid/squid.conf
-#exec $(which squid) -YCNd 1 -f /etc/squid/squid.conf ${EXTRA_ARGS}
+#exec $(which squid) -YCNd 1 -f /etc/squid/squid.conf ${SQUID_EXTRA_ARGS}
 
