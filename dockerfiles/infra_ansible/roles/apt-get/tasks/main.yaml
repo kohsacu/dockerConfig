@@ -3,7 +3,7 @@
   become: yes
   apt:
     update_cache: yes
-  tags: 
+  tags:
     - check
     - upgrade
 
@@ -12,14 +12,14 @@
   shell: LC_ALL=en_EN.UTF-8 DEBIAN_FRONTEND=noninteractive apt-get upgrade -s
   register: _catch_update_packages_
   changed_when: False
-  tags: 
+  tags:
     - check
 
 - name: Print "apt-get upgrade"
   debug: var=_catch_update_packages_.stdout_lines
   #debug: var=_catch_update_packages_.stdout
   #when: _catch_update_packages_ is success
-  tags: 
+  tags:
     - check
 
 - name: Upgrade "apt packages"
@@ -27,7 +27,15 @@
   apt:
     upgrade: safe
   register: _catch_apt_upgrade_
-  tags: 
+  tags:
+    - upgrade
+
+- name: Create a directory if it does not exist
+  file:
+    path: ${HOME}/Work/logs
+    state: directory
+    mode: '0775'
+  tags:
     - upgrade
 
 - name: shell "dpkg -l > .out"

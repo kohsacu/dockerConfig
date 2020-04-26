@@ -12,11 +12,19 @@ services:
             context: ./Dockerfiles
             dockerfile: Dockerfile
             args:
-                - ANSIBLE_VERSION=${ANSIBLE_VERSION}
+                - LOGIN_USER=${LOGIN_USER}
+                - LOGIN_UID=${LOGIN_UID}
+                - LOGIN_GID=${LOGIN_GID}
+                - LOGIN_USER_PASSWORD=${LOGIN_USER_PASSWORD}
+                - ADD_LOCALE=${ADD_LOCALE}
+                - SET_LOCALE=${SET_LOCALE}
+                - LC_ALL=${LC_ALL}
         volumes:
             - /etc/localtime:/etc/localtime:ro
-            - ./:/var/tmp/ansible
+            - ./:/var/opt/ansible:rw
         image: ${REPOSITORY}:${TAG}
+        container_name: ansible-con
+        hostname: ansible-srv
         tty: true
         logging:
             driver: "syslog"
@@ -27,18 +35,18 @@ services:
         #cap_add:
         #    - NET_ADMIN
         network_mode: "bridge"
+        entrypoint:
+            - ansible
     ansible-playbook:
         env_file:
             - ./.env
-        build:
-            context: ./Dockerfiles
-            dockerfile: Dockerfile
-            args:
-                - ANSIBLE_VERSION=${ANSIBLE_VERSION}
+        image: ${REPOSITORY}:${TAG}
         volumes:
             - /etc/localtime:/etc/localtime:ro
-            - ./:/var/tmp/ansible
+            - ./:/var/opt/ansible:rw
         image: ${REPOSITORY}:${TAG}
+        container_name: ansible-playbook-con
+        hostname: ansible-srv
         tty: true
         logging:
             driver: "syslog"
@@ -51,4 +59,24 @@ services:
         network_mode: "bridge"
         entrypoint:
             - ansible-playbook
+    ansible-shell:
+        env_file:
+            - ./.env
+        image: ${REPOSITORY}:${TAG}
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - ./:/var/opt/ansible:rw
+            - /var/tmp/ansible-shell/${HOSTNAME_ANSIBLE_SHELL_CON}:/var/tmp/ansible-shell:rw
+        image: ${REPOSITORY}:${TAG}
+        container_name: ${HOSTNAME_ANSIBLE_SHELL_CON}
+        hostname: ${HOSTNAME_ANSIBLE_SHELL_CON}
+        tty: true
+        logging:
+            driver: "syslog"
+            options:
+                syslog-facility: "daemon"
+                tag: "{{.DaemonName}}/{{.ImageName}}/{{.Name}}"
+        network_mode: "bridge"
+        entrypoint:
+            - bash
 
