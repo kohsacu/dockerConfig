@@ -1,3 +1,4 @@
+/.env
 /inventories/*
 !/inventories/hosts.ini.template
 /secret.yaml
