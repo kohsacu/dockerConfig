@@ -5,16 +5,16 @@ LABEL maintainer="Kohsacu <kohsacu@email.local>" \
 
 ARG BIRD_BRANCH="v2.0.5"
 ENV BIRD_BRANCH="${BIRD_BRANCH}"
-ENV PATH /opt/bird/sbin:/opt/local/sbin:"${PATH}"
+ENV PATH="/opt/bird/sbin:/opt/local/sbin:${PATH}"
+ENV DEBIAN_FRONTEND="noninteractive"
 
 # Write it in "1 line 1 package" "alphabetical order" for review.
 RUN set -x \
-  && DEBIAN_FRONTEND=noninteractive \
   && perl -pi -e \
     's%^deb https?://(?!security)[^ \t]+%deb http://jp.archive.ubuntu.com/ubuntu/%g' \
     /etc/apt/sources.list \
   && apt-get update \
-  && : apt-get upgrade -y \
+  && apt-get upgrade -y \
   && apt-get install -y --no-install-recommends \
     autoconf \
     automake \
@@ -24,8 +24,11 @@ RUN set -x \
     flex \
     git \
     gcc \
+    hping3 \
+    iperf3 \
     iproute2 \
     iputils-ping \
+    keepalived \
     libncurses5-dev \
     libreadline6-dev \
     libtool \
@@ -34,7 +37,6 @@ RUN set -x \
     python3.6 \
     tcpdump \
     traceroute \
-    vim \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 WORKDIR "/var/tmp/bird"
 # not installed ca-certificates package

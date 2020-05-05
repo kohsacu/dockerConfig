@@ -6,14 +6,14 @@ services:
             - ./.env
         build:
             context: .
-            dockerfile: Dockerfile-bird
+            dockerfile: ./Dockerfiles/bird/Dockerfile
             args:
                 - BIRD_BRANCH=${BIRD_BRANCH}
+        image: ${REPOSITORY}:${TAG}
         volumes:
             - /etc/localtime:/etc/localtime:ro
-            - ${HOME}/docker.volume/bird-A-0/bird/etc:/opt/bird/etc
-            - ${HOME}/docker.volume/bird-A-0/local/etc:/opt/local/etc
-        image: ${REPOSITORY}:${TAG}
+            - /var/opt/docker.volume/bird-A-0/bird/etc:/opt/bird/etc
+            - /var/opt/docker.volume/bird-A-0/local/etc:/opt/local/etc
         container_name: bird-A-0
         hostname: bird-A-0
         tty: true
@@ -25,6 +25,9 @@ services:
                 tag: "{{.DaemonName}}/{{.ImageName}}/{{.Name}}"
         cap_add:
             - NET_ADMIN
+        sysctls:
+            - net.ipv4.conf.default.rp_filter=0
+            - net.ipv4.conf.all.rp_filter=0
         networks:
             redundant-link0:
                 ipv4_address: 10.10.20.10
@@ -32,20 +35,17 @@ services:
                 ipv4_address: 10.10.21.10
             external-link0:
                 ipv4_address: 10.10.30.10
-            gwbridge:
+            handover-linkA:
+                ipv4_address: 192.0.2.5
+            #external-bridge:
     bird-A-1:
         env_file:
             - ./.env
-        build:
-            context: .
-            dockerfile: Dockerfile-bird
-            args:
-                - BIRD_BRANCH=${BIRD_BRANCH}
+        image: ${REPOSITORY}:${TAG}
         volumes:
             - /etc/localtime:/etc/localtime:ro
-            - ${HOME}/docker.volume/bird-A-1/bird/etc:/opt/bird/etc
-            - ${HOME}/docker.volume/bird-A-1/local/etc:/opt/local/etc
-        image: ${REPOSITORY}:${TAG}
+            - /var/opt/docker.volume/bird-A-1/bird/etc:/opt/bird/etc
+            - /var/opt/docker.volume/bird-A-1/local/etc:/opt/local/etc
         container_name: bird-A-1
         hostname: bird-A-1
         tty: true
@@ -57,27 +57,27 @@ services:
                 tag: "{{.DaemonName}}/{{.ImageName}}/{{.Name}}"
         cap_add:
             - NET_ADMIN
+        sysctls:
+            - net.ipv4.conf.default.rp_filter=0
+            - net.ipv4.conf.all.rp_filter=0
         networks:
             redundant-link0:
                 ipv4_address: 10.10.20.11
             redundant-link1:
                 ipv4_address: 10.10.21.11
-            external-link1:
-                ipv4_address: 10.10.31.11
-            gwbridge:
+            external-link0:
+                ipv4_address: 10.10.30.11
+            handover-linkA:
+                ipv4_address: 192.0.2.6
+            #external-bridge:
     bird-B-0:
         env_file:
             - ./.env
-        build:
-            context: .
-            dockerfile: Dockerfile-bird
-            args:
-                - BIRD_BRANCH=${BIRD_BRANCH}
+        image: ${REPOSITORY}:${TAG}
         volumes:
             - /etc/localtime:/etc/localtime:ro
-            - ${HOME}/docker.volume/bird-B-0/bird/etc:/opt/bird/etc
-            - ${HOME}/docker.volume/bird-B-0/local/etc:/opt/local/etc
-        image: ${REPOSITORY}:${TAG}
+            - /var/opt/docker.volume/bird-B-0/bird/etc:/opt/bird/etc
+            - /var/opt/docker.volume/bird-B-0/local/etc:/opt/local/etc
         container_name: bird-B-0
         hostname: bird-B-0
         tty: true
@@ -89,25 +89,25 @@ services:
                 tag: "{{.DaemonName}}/{{.ImageName}}/{{.Name}}"
         cap_add:
             - NET_ADMIN
+        sysctls:
+            - net.ipv4.conf.default.rp_filter=0
+            - net.ipv4.conf.all.rp_filter=0
         networks:
             redundant-link0:
                 ipv4_address: 10.10.20.20
-            internal-link:
-                ipv4_address: 10.10.40.20
-            gwbridge:
+            closed-link01:
+                ipv4_address: 10.100.1.252
+            handover-linkB:
+                ipv4_address: 192.0.2.13
+            #external-bridge:
     bird-B-1:
         env_file:
             - ./.env
-        build:
-            context: .
-            dockerfile: Dockerfile-bird
-            args:
-                - BIRD_BRANCH=${BIRD_BRANCH}
+        image: ${REPOSITORY}:${TAG}
         volumes:
             - /etc/localtime:/etc/localtime:ro
-            - ${HOME}/docker.volume/bird-B-1/bird/etc:/opt/bird/etc
-            - ${HOME}/docker.volume/bird-B-1/local/etc:/opt/local/etc
-        image: ${REPOSITORY}:${TAG}
+            - /var/opt/docker.volume/bird-B-1/bird/etc:/opt/bird/etc
+            - /var/opt/docker.volume/bird-B-1/local/etc:/opt/local/etc
         container_name: bird-B-1
         hostname: bird-B-1
         tty: true
@@ -119,26 +119,157 @@ services:
                 tag: "{{.DaemonName}}/{{.ImageName}}/{{.Name}}"
         cap_add:
             - NET_ADMIN
+        sysctls:
+            - net.ipv4.conf.default.rp_filter=0
+            - net.ipv4.conf.all.rp_filter=0
         networks:
             redundant-link1:
                 ipv4_address: 10.10.21.21
-            internal-link:
-                ipv4_address: 10.10.40.21
-            gwbridge:
+            closed-link01:
+                ipv4_address: 10.100.1.253
+            handover-linkB:
+                ipv4_address: 192.0.2.14
+            #external-bridge:
+    bird-ToR-0:
+        env_file:
+            - ./.env
+        image: ${REPOSITORY}:${TAG}
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - /var/opt/docker.volume/bird-ToR-0/bird/etc:/opt/bird/etc
+            - /var/opt/docker.volume/bird-ToR-0/local/etc:/opt/local/etc
+        container_name: bird-ToR-0
+        hostname: bird-ToR-0
+        tty: true
+        logging:
+            driver: "syslog"
+            options:
+                #syslog-address: udp://{{syslog_srv}}:514
+                syslog-facility: "daemon"
+                tag: "{{.DaemonName}}/{{.ImageName}}/{{.Name}}"
+        cap_add:
+            - NET_ADMIN
+        sysctls:
+            - net.ipv4.conf.default.rp_filter=0
+            - net.ipv4.conf.all.rp_filter=0
+        networks:
+            external-link0:
+                ipv4_address: 10.10.30.30
+            transfer-link:
+                ipv4_address: 100.64.0.5
+            handover-linkC:
+                ipv4_address: 192.0.2.21
+            #external-bridge:
+    bird-ToR-1:
+        env_file:
+            - ./.env
+        image: ${REPOSITORY}:${TAG}
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - /var/opt/docker.volume/bird-ToR-1/bird/etc:/opt/bird/etc
+            - /var/opt/docker.volume/bird-ToR-1/local/etc:/opt/local/etc
+        container_name: bird-ToR-1
+        hostname: bird-ToR-1
+        tty: true
+        logging:
+            driver: "syslog"
+            options:
+                #syslog-address: udp://{{syslog_srv}}:514
+                syslog-facility: "daemon"
+                tag: "{{.DaemonName}}/{{.ImageName}}/{{.Name}}"
+        cap_add:
+            - NET_ADMIN
+        sysctls:
+            - net.ipv4.conf.default.rp_filter=0
+            - net.ipv4.conf.all.rp_filter=0
+        networks:
+            external-link0:
+                ipv4_address: 10.10.30.31
+            transfer-link:
+                ipv4_address: 100.64.0.6
+            handover-linkC:
+                ipv4_address: 192.0.2.22
+            #external-bridge:
+    bird-client01:
+        env_file:
+            - ./.env
+        image: ${REPOSITORY}:${TAG}
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - /var/opt/docker.volume/bird-client01/local/etc:/opt/local/etc
+        container_name: bird-client01
+        hostname: bird-client01
+        tty: true
+        logging:
+            driver: "syslog"
+            options:
+                #syslog-address: udp://{{syslog_srv}}:514
+                syslog-facility: "daemon"
+                tag: "{{.DaemonName}}/{{.ImageName}}/{{.Name}}"
+        cap_add:
+            - NET_ADMIN
+        networks:
+            closed-link01:
+                ipv4_address: 10.100.1.131
+            #external-bridge:
+    bird-client02:
+        env_file:
+            - ./.env
+        image: ${REPOSITORY}:${TAG}
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - /var/opt/docker.volume/bird-client02/local/etc:/opt/local/etc
+        container_name: bird-client02
+        hostname: bird-client02
+        tty: true
+        logging:
+            driver: "syslog"
+            options:
+                #syslog-address: udp://{{syslog_srv}}:514
+                syslog-facility: "daemon"
+                tag: "{{.DaemonName}}/{{.ImageName}}/{{.Name}}"
+        cap_add:
+            - NET_ADMIN
+        networks:
+            closed-link01:
+                ipv4_address: 10.100.1.132
+            #external-bridge:
+    bird-server01:
+        env_file:
+            - ./.env
+        image: ${REPOSITORY}:${TAG}
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - /var/opt/docker.volume/bird-server01/local/etc:/opt/local/etc
+        container_name: bird-server01
+        hostname: bird-server01
+        tty: true
+        logging:
+            driver: "syslog"
+            options:
+                #syslog-address: udp://{{syslog_srv}}:514
+                syslog-facility: "daemon"
+                tag: "{{.DaemonName}}/{{.ImageName}}/{{.Name}}"
+        cap_add:
+            - NET_ADMIN
+        networks:
+            transfer-link:
+                ipv4_address: 100.64.0.126
+            external-bridge:
     bird-gobgp:
         env_file:
             - ./.env
         build:
             context: .
-            dockerfile: Dockerfile-gobgp
+            dockerfile: ./Dockerfiles/gobgp/Dockerfile
             args:
                 - GOBGP_BRANCH=${GOBGP_BRANCH}
                 - GO_VERSION=${GO_VERSION}
                 - GO_SHA256_CHECKSUM=${GO_SHA256_CHECKSUM}
         volumes:
             - /etc/localtime:/etc/localtime:ro
-            - ${HOME}/docker.volume/bird-gobgp/go/etc:/root/go/etc
-            - ${HOME}/docker.volume/bird-gobgp/local/etc:/opt/local/etc
+            - /var/opt/docker.volume/bird-gobgp/go/etc:/root/go/etc
+            - /var/opt/docker.volume/bird-gobgp/local/etc:/opt/local/etc
         image: ${GOBGP_REPOSITORY}:${GOBGP_TAG}
         container_name: bird-gobgp
         hostname: bird-gobgp
@@ -153,66 +284,10 @@ services:
             - NET_ADMIN
         networks:
             redundant-link0:
-                ipv4_address: 10.10.20.40
+                ipv4_address: 10.10.20.90
             redundant-link1:
-                ipv4_address: 10.10.21.40
-            gwbridge:
-    ToR-0:
-        env_file:
-            - ./.env
-        build:
-            context: .
-            dockerfile: Dockerfile-bird
-            args:
-                - BIRD_BRANCH=${BIRD_BRANCH}
-        volumes:
-            - /etc/localtime:/etc/localtime:ro
-            - ${HOME}/docker.volume/bird-ToR-0/bird/etc:/opt/bird/etc
-            - ${HOME}/docker.volume/bird-ToR-0/local/etc:/opt/local/etc
-        image: ${REPOSITORY}:${TAG}
-        container_name: ToR-0
-        hostname: ToR-0
-        tty: true
-        logging:
-            driver: "syslog"
-            options:
-                #syslog-address: udp://{{syslog_srv}}:514
-                syslog-facility: "daemon"
-                tag: "{{.DaemonName}}/{{.ImageName}}/{{.Name}}"
-        cap_add:
-            - NET_ADMIN
-        networks:
-            external-link0:
-                ipv4_address: 10.10.30.30
-            gwbridge:
-    ToR-1:
-        env_file:
-            - ./.env
-        build:
-            context: .
-            dockerfile: Dockerfile-bird
-            args:
-                - BIRD_BRANCH=${BIRD_BRANCH}
-        volumes:
-            - /etc/localtime:/etc/localtime:ro
-            - ${HOME}/docker.volume/bird-ToR-1/bird/etc:/opt/bird/etc
-            - ${HOME}/docker.volume/bird-ToR-1/local/etc:/opt/local/etc
-        image: ${REPOSITORY}:${TAG}
-        container_name: ToR-1
-        hostname: ToR-1
-        tty: true
-        logging:
-            driver: "syslog"
-            options:
-                #syslog-address: udp://{{syslog_srv}}:514
-                syslog-facility: "daemon"
-                tag: "{{.DaemonName}}/{{.ImageName}}/{{.Name}}"
-        cap_add:
-            - NET_ADMIN
-        networks:
-            external-link1:
-                ipv4_address: 10.10.31.30
-            gwbridge:
+                ipv4_address: 10.10.21.90
+            #external-bridge:
 
 networks:
     redundant-link0:
@@ -222,6 +297,7 @@ networks:
             driver: default
             config:
                 - subnet: "10.10.20.0/24"
+        internal: true
     redundant-link1:
         name: bfd-redundant1
         driver: bridge
@@ -229,6 +305,7 @@ networks:
             driver: default
             config:
                 - subnet: "10.10.21.0/24"
+        internal: true
     external-link0:
         name: bfd-external0
         driver: bridge
@@ -236,21 +313,48 @@ networks:
             driver: default
             config:
                 - subnet: "10.10.30.0/24"
-    external-link1:
-        name: bfd-external1
+        internal: true
+    handover-linkA:
+        name: handoverA
         driver: bridge
         ipam:
             driver: default
             config:
-                - subnet: "10.10.31.0/24"
-    internal-link:
-        name: bfd-internal
+                - subnet: "192.0.2.0/29"
+        internal: true
+    handover-linkB:
+        name: handoverB
         driver: bridge
         ipam:
             driver: default
             config:
-                - subnet: "10.10.40.0/24"
-    gwbridge:
+                - subnet: "192.0.2.8/29"
+        internal: true
+    handover-linkC:
+        name: handoverC
+        driver: bridge
+        ipam:
+            driver: default
+            config:
+                - subnet: "192.0.2.16/29"
+        internal: true
+    closed-link01:
+        name: vrrp-closed01
+        driver: bridge
+        ipam:
+            driver: default
+            config:
+                - subnet: "10.100.1.0/24"
+        internal: true
+    transfer-link:
+        name: vrrp-transfer
+        driver: bridge
+        ipam:
+            driver: default
+            config:
+                - subnet: "100.64.0.0/24"
+        internal: true
+    external-bridge:
         external:
             name: docker_gwbridge
 
