@@ -260,7 +260,7 @@ PLAY [localhost] ***************************************************************
 (..snip..)
 ```
 
-## Security Append
+### Security Append
 
 - Generate ntp_conf.yml
   ```bash
@@ -276,7 +276,7 @@ PLAY [localhost] ***************************************************************
   $ sudo docker-compose run --rm ansible-playbook -i ./inventories/hosts.ini ./base-config.yaml --tags=security_append
   ```
 
-## SSH public key authentication (enable passphrase)
+### SSH public key authentication (enable passphrase)
 
 - Edit secret.yaml file
   ```bash
