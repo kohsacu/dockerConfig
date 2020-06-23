@@ -2,12 +2,14 @@
 - hosts: localhost
   connection: local
   tasks:
-  - name: Check "tags"
-    fail: msg="'--tags' is required. $ ansible-playbook --list-tags"
+  roles:
+    - sshkey-into-con
+  gather_facts: no
 
 - name: kernel-purge
   hosts: linux_nodes
   roles:
+    - check-tags
     - kernel-purge
   vars_prompt:
     name: PURGE_VERSION
@@ -15,4 +17,5 @@
     private: no
     confirm: no
     default: "a.b.c-000"
+  gather_facts: no
 

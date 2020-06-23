@@ -1,0 +1,4 @@
+---
+- name: Required check
+  fail: msg="'--tags' is required. $ ansible-playbook --list-tags"
+

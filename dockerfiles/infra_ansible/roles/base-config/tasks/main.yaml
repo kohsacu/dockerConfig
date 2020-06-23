@@ -58,7 +58,18 @@
     - security_check
     - security_append
 
-- name: Include vars of include_vars.yml into the 'ntp_conf' variable
+- name: apt install packages
+  become: yes
+  apt:
+    update_cache: yes
+    # Unit of time is seconds.
+    cache_valid_time: 86400
+    name:
+     - chrony
+  tags:
+    - security_append
+
+- name: Include vars of ntp_conf.yml into the 'ntp_conf' variable
   include_vars:
     #file: include_vars.yml
     file: ntp_conf.yml

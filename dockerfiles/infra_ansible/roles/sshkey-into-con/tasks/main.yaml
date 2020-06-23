@@ -1,0 +1,32 @@
+---
+- name: Create .ssh directory
+  become: no
+  file:
+    path: "/home/{{ ansible_ssh_user }}/{{ item.directory }}"
+    mode: '0700'
+    state: directory
+  with_items:
+    - { directory: .ssh }
+  tags:
+    - ssh-into
+    - always
+
+- name: ssh private key into container
+  become: no
+  shell:  echo -n "{{ ssh_private_key_base64_w0 }}" | base64 --decode > /home/{{ ansible_ssh_user }}/.ssh/id_sshkey_password
+  tags:
+    - ssh-into
+    - always
+
+- name: Chenge Permissions for ssh private-key file
+  become: no
+  file:
+    path: "/home/{{ ansible_ssh_user }}/{{ item.file}}"
+    mode: '0600'
+    state: file
+  with_items:
+    - { file: .ssh/id_sshkey_password }
+  tags:
+    - ssh-into
+    - always
+

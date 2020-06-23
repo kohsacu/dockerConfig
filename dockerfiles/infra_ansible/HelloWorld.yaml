@@ -1,8 +1,14 @@
 ---
+- hosts: localhost
+  connection: local
+  tasks:
+  roles:
+    - sshkey-into-con
+  gather_facts: no
+
 - name: Test HelloWorld
   hosts: linux_nodes
   roles:
     - HelloWorld
-  #vars_files:
-  #  - secret.yaml
+  gather_facts: no
 

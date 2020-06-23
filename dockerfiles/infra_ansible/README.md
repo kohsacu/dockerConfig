@@ -260,6 +260,42 @@ PLAY [localhost] ***************************************************************
 (..snip..)
 ```
 
+## Security Append
+
+- Generate ntp_conf.yml
+  ```bash
+  $ cp -ip ./roles/base-config/vars/ntp_conf.yml{.template,}
+  $ ANSIBLE_NTP_SRVS="100.127.255.123, 192.0.2.123, 198.51.100.123, 203.0.113.123"
+  $ [ -z ${ANSIBLE_NTP_SRVS// //} ] || for i in $(echo ${ANSIBLE_NTP_SRVS} | sed -e 's/,/ /g')
+  > do
+  >   echo "  - ${i}"
+  > done | tee -a ./roles/base-config/vars/ntp_conf.yml
+  ```
+- run playbook
+  ```bash
+  $ sudo docker-compose run --rm ansible-playbook -i ./inventories/hosts.ini ./base-config.yaml --tags=security_append
+  ```
+
+## SSH public key authentication (enable passphrase)
+
+- Edit secret.yaml file
+  ```bash
+  $ vim ./group_vars/{east,west}/secret.yaml
+  ~
+  ---
+  ansible_ssh_user="ansible"
+  ansible_ssh_pass="ansible 12345"    # <= ssh private key passphrase
+  ansible_become_pass="ansible!1234"
+  ansible_private_key_file: "~/.ssh/id_sshkey_password"  # <= Add new line
+  ~
+  :wq
+  ```
+- run playbook
+  ```bash
+  $ sudo docker-compose run --rm ansible-playbook -i ./inventories/hosts.ini ./HelloWorld.yaml \
+  > --extra-vars ssh_private_key_base64_w0="$(base64 --wrap=0 ~/.ssh/id_ed25519)"
+  ```
+
 ## OneShot
 
 ```bash

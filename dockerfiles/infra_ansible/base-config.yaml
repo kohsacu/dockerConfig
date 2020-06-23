@@ -2,11 +2,14 @@
 - hosts: localhost
   connection: local
   tasks:
-  - name: Check "tags"
-    fail: msg="'--tags' is required. $ ansible-playbook --list-tags"
+  roles:
+    - sshkey-into-con
+  gather_facts: no
 
 - name: base-config
   hosts: linux_nodes
   roles:
+    - check-tags
     - base-config
+  gather_facts: no
 
