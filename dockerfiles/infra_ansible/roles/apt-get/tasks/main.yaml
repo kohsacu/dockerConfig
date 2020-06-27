@@ -1,8 +1,9 @@
 ---
-- name: Update "apt cache"
+- name: Exec "apt-get update"
   become: yes
   apt:
     update_cache: yes
+    cache_valid_time: 3600
   tags:
     - check
     - upgrade
@@ -22,10 +23,11 @@
   tags:
     - check
 
-- name: Upgrade "apt packages"
+- name: Exec "apt-get upgrade"
   become: yes
   apt:
     upgrade: safe
+    install_recommends: no
   register: _catch_apt_upgrade_
   tags:
     - upgrade

@@ -19,6 +19,8 @@ ARG SET_LOCALE="en_US.UTF-8"
 ENV SET_LOCALE="${SET_LOCALE}"
 ARG LC_ALL="en_US.UTF-8"
 ENV LC_ALL="${SET_LOCALE}"
+ARG LANG="en_US.UTF-8"
+ENV LANG="${SET_LOCALE}"
 
 ENV DEBIAN_FRONTEND="noninteractive"
 ENV HOME /home/"${LOGIN_USER}"
@@ -38,10 +40,13 @@ RUN set -x \
     "${LOGIN_USER}" \
   && gpasswd -a "${LOGIN_USER}" sudo \
   && : "== Make Working diractory ==" \
-  && mkdir -p "${ANSIBLE_SHELL_DIR}" \
-  && mkdir -p "${ANSIBLE_SBIN_DIR}" \
-  && mkdir -p "${ANSIBLE_BIN_DIR}" \
-  && mkdir -p "${PYTHON_VENV_DIR}"
+  && mkdir --parents --mode=700   "${HOME}/.ssh" \
+  && chown --quiet "${LOGIN_UID}" "${HOME}/.ssh" \
+  && chgrp --quiet "${LOGIN_UID}" "${HOME}/.ssh" \
+  && mkdir --parents "${ANSIBLE_SHELL_DIR}" \
+  && mkdir --parents "${ANSIBLE_SBIN_DIR}" \
+  && mkdir --parents "${ANSIBLE_BIN_DIR}" \
+  && mkdir --parents "${PYTHON_VENV_DIR}"
 
 # Write it in "1 line 1 package" "alphabetical order" for review.
 RUN set -x \
