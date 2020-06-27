@@ -16,7 +16,7 @@ services:
         volumes:
             - /etc/localtime:/etc/localtime:ro
             - /etc/ssh/ssh_host_ed25519_key:/etc/ssh/ssh_host_ed25519_key:ro
-            - ${HOME}/docker.volume/${CONTAINER}:/home/${LOGIN_USER}/volume
+            - /var/opt/docker.volume/${CONTAINER}:/home/${LOGIN_USER}/volume
         container_name: ${CONTAINER}
         hostname: ${CONTAINER}
         image: ${REPOSITORY}:${TAG}
