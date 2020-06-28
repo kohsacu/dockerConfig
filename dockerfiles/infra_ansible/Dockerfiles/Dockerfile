@@ -22,6 +22,11 @@ ENV LC_ALL="${SET_LOCALE}"
 ARG LANG="en_US.UTF-8"
 ENV LANG="${SET_LOCALE}"
 
+ARG DOCKER_VERSION="5:19.03.12~3-0~ubuntu-bionic"
+ENV DOCKER_VERSION="${DOCKER_VERSION}"
+ARG CONTAINERD_VERION="1.2.13-2"
+ENV CONTAINERD_VERION="${CONTAINERD_VERION}"
+
 ENV DEBIAN_FRONTEND="noninteractive"
 ENV HOME /home/"${LOGIN_USER}"
 ENV PATH "${HOME}"/bin:/opt/local/sbin:/opt/local/bin:"${PATH}"
@@ -56,7 +61,14 @@ RUN set -x \
   && apt-get update \
   && apt-get upgrade -y \
   && LC_ALL=C apt-get install -y --no-install-recommends \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    gcc \
+    gnupg-agent \
+    libc6-dev \
     locales \
+    make \
     openssh-client \
     python3-pip \
     python3-setuptools \
@@ -64,9 +76,25 @@ RUN set -x \
     python3.6 \
     python3.6-dev \
     python3.6-venv \
+    software-properties-common \
     sshpass \
     sudo \
     tzdata \
+  && : "== Add gpg-key and apt-line to Docker Repository ==" \
+  && curl -sS 'https://download.docker.com/linux/ubuntu/gpg' | \
+    apt-key --keyring /etc/apt/trusted.gpg.d/docker-ce_release_deb.gpg add - \
+  && { \
+    echo "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"; \
+  } | sudo tee /etc/apt/sources.list.d/docker-ce.list \
+  && apt-key list \
+  && apt-get update \
+  && LC_ALL=C apt-get install -y --no-install-recommends \
+    docker-ce=${DOCKER_VERSION} \
+    docker-ce-cli=${DOCKER_VERSION} \
+    containerd.io=${CONTAINERD_VERION} \
+    libltdl7 \
+    pigz \
+  && gpasswd -a "${LOGIN_USER}" docker \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY ./requirements.txt /root/
@@ -79,6 +107,7 @@ RUN set -x \
   && pip install --no-cache-dir --requirement /root/requirements.txt \
   && ln -s "${PYTHON_VENV_DIR}"/ansible/bin/ansible          ${ANSIBLE_BIN_DIR}/ \
   && ln -s "${PYTHON_VENV_DIR}"/ansible/bin/ansible-playbook ${ANSIBLE_BIN_DIR}/ \
+  && ln -s "${PYTHON_VENV_DIR}"/ansible/bin/docker-compose   ${ANSIBLE_BIN_DIR}/ \
   && deactivate
 
 RUN set -x \

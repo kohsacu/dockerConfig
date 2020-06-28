@@ -19,6 +19,8 @@ services:
                 - ADD_LOCALE=${ADD_LOCALE}
                 - SET_LOCALE=${SET_LOCALE}
                 - LC_ALL=${LC_ALL}
+                - DOCKER_VERSION=${DOCKER_VERSION}
+                - CONTAINERD_VERION=${CONTAINERD_VERION}
         image: ${REPOSITORY}:${TAG}
         volumes:
             - /etc/localtime:/etc/localtime:ro
@@ -67,6 +69,8 @@ services:
             - /etc/localtime:/etc/localtime:ro
             - ./:/var/opt/ansible:rw
             - /var/tmp/ansible-shell/${HOSTNAME_ANSIBLE_SHELL_CON}:/var/tmp/ansible-shell:rw
+            # DooD(Docker outside of Docker)
+            - /var/run/docker.sock:/var/run/docker.sock
         image: ${REPOSITORY}:${TAG}
         container_name: ${HOSTNAME_ANSIBLE_SHELL_CON}
         hostname: ${HOSTNAME_ANSIBLE_SHELL_CON}
