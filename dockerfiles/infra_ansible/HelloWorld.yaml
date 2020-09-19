@@ -10,5 +10,5 @@
   hosts: linux_nodes
   roles:
     - HelloWorld
-  gather_facts: no
+  gather_facts: True
 
