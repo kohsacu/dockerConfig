@@ -1,0 +1,16 @@
+conn common
+    dpdaction=clear
+    dpddelay=180s
+    # dpdtimeout is not honored for ikev2. For IKEv2, every message is used
+    # to determine the timeout, so the generic timeout value for IKEv2 messages
+    # is used.
+    dpdtimeout=300s
+    # enables IKE fragmentation
+    fragmentation=yes
+    #
+    leftcert=SrvCert_vpn-00.kvm0255.global.pem
+    #leftsourceip=%config
+    leftid=vpn-00.kvm0255.global
+    leftauth=pubkey
+    leftfirewall=yes
+
