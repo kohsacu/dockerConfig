@@ -1,0 +1,10 @@
+#!/bin/sh
+
+# 
+# == env ==
+# 
+MY_PHYS_IF='enp1s0'
+LOCALNET0_IF='enp1s0'
+DOCKERNET0_IF='docker0'
+IPT='/sbin/ip6tables'
+

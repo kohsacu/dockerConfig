@@ -1,0 +1,150 @@
+#!/bin/sh
+
+ENV_FILE=${1}
+. ${ENV_FILE}
+
+# 
+# == Initializing ==
+# 
+## テーブル初期化
+${IPT} --table filter --flush
+${IPT} --table nat    --flush
+${IPT} --table mangle --flush
+## チェーンを削除
+${IPT} --table filter --delete-chain
+${IPT} --table nat    --delete-chain
+${IPT} --table mangle --delete-chain
+## パケットカウンタ・バイトカウンタをクリア
+${IPT} --table filter --zero
+${IPT} --table nat    --zero
+${IPT} --table mangle --zero
+
+# 
+#  == Default Policy ==
+# 
+${IPT} --table filter --policy INPUT       DROP
+${IPT} --table filter --policy OUTPUT      DROP
+${IPT} --table filter --policy FORWARD     DROP
+${IPT} --table nat    --policy PREROUTING  ACCEPT
+${IPT} --table nat    --policy INPUT       ACCEPT
+${IPT} --table nat    --policy OUTPUT      ACCEPT
+${IPT} --table nat    --policy POSTROUTING ACCEPT
+${IPT} --table mangle --policy PREROUTING  ACCEPT
+${IPT} --table mangle --policy INPUT       ACCEPT
+${IPT} --table mangle --policy FORWARD     ACCEPT
+${IPT} --table mangle --policy OUTPUT      ACCEPT
+${IPT} --table mangle --policy POSTROUTING ACCEPT
+
+#
+# == Logging chain ==
+#
+## Incoming
+${IPT} --new-chain LOG_INCOMINGv4
+${IPT} --append LOG_INCOMINGv4   --match limit --limit 10/s --jump LOG --log-level warning --log-prefix "[iptables: Incoming]: "
+${IPT} --append LOG_INCOMINGv4   --jump DROP
+## Outgoing
+${IPT} --new-chain LOG_OUTGOINGv4
+${IPT} --append LOG_OUTGOINGv4   --match limit --limit 10/s --jump LOG --log-level warning --log-prefix "[iptables: Outgoing]: "
+${IPT} --append LOG_OUTGOINGv4   --jump DROP
+## Forwarding
+${IPT} --new-chain LOG_FORWARDINGv4
+${IPT} --append LOG_FORWARDINGv4 --match limit --limit 10/s --jump LOG --log-level warning --log-prefix "[iptables: Forwarding]: "
+${IPT} --append LOG_FORWARDINGv4 --jump DROP
+## DOCKER-USER
+${IPT} --new-chain LOG_DOCKERUSERv4
+${IPT} --append LOG_DOCKERUSERv4 --match limit --limit 10/s --jump LOG --log-level warning --log-prefix "[iptables: DockerUser]: "
+${IPT} --append LOG_DOCKERUSERv4 --jump RETURN
+## Ping of Death
+${IPT} --new-chain PING_OF_DEATH
+### `--hashlimit-mode` 単位で `--hashlimit` 期間の間に `--hashlimit-burst` 回 `--jump`.
+### `--hashlimit-burst` 回以降はログを取得して DROP.
+### `--hashlimit-htable-expire` は HashTable(レコード)の生存期間(msec).
+${IPT} --append PING_OF_DEATH --protocol icmp --icmp-type echo-request \
+    --match hashlimit \
+    --hashlimit-upto 1/min \
+    --hashlimit-burst 5 \
+    --hashlimit-mode srcip \
+    --hashlimit-name hashEchoReqCheck \
+    --hashlimit-htable-expire 300000 \
+    --jump ACCEPT
+#   --hashlimit-mode srcip,dstport \
+${IPT} --append PING_OF_DEATH --match limit --limit 1/s --jump LOG --log-prefix "[iptables: hashlimit]: "
+${IPT} --append PING_OF_DEATH --jump DROP
+
+#
+# == New chain ==
+#
+${IPT} --new-chain DOCKER-USER
+
+# 
+# == Policies ==
+# 
+## Loopback
+### lo は全て許可
+${IPT} --append INPUT  --in-interface  lo --jump ACCEPT
+${IPT} --append OUTPUT --out-interface lo --jump ACCEPT
+
+## ESTABLISHED
+### セッション確立後のパケットを許可
+${IPT} --append INPUT       --in-interface  ${LOCALNET0_IF}  --match conntrack --ctstate ESTABLISHED,RELATED --jump ACCEPT
+${IPT} --append OUTPUT      --out-interface ${LOCALNET0_IF}  --match conntrack --ctstate ESTABLISHED,RELATED --jump ACCEPT
+${IPT} --append INPUT       --in-interface  ${DOCKERNET0_IF} --match conntrack --ctstate RELATED,ESTABLISHED --jump ACCEPT
+${IPT} --append OUTPUT      --out-interface ${DOCKERNET0_IF} --match conntrack --ctstate RELATED,ESTABLISHED --jump ACCEPT
+${IPT} --append DOCKER-USER --in-interface  ${DOCKERNET0_IF} --match conntrack --ctstate RELATED,ESTABLISHED --jump ACCEPT
+${IPT} --append DOCKER-USER --out-interface ${DOCKERNET0_IF} --match conntrack --ctstate RELATED,ESTABLISHED --jump ACCEPT
+${IPT} --append DOCKER-USER --in-interface  ${LOCALNET0_IF}  --match conntrack --ctstate RELATED,ESTABLISHED --jump ACCEPT
+${IPT} --append DOCKER-USER --out-interface ${LOCALNET0_IF}  --match conntrack --ctstate RELATED,ESTABLISHED --jump ACCEPT
+
+## for Server
+### sshd
+${IPT} --append INPUT       --in-interface  ${LOCALNET0_IF}    --source ${LOCALNET0_PFIX} \
+    --match conntrack --ctstate NEW --match tcp --protocol tcp --dport    22 --jump ACCEPT
+${IPT} --append INPUT       --in-interface  ${LOCALNET0_IF}    --source 10.128.0.254/32   \
+    --match conntrack --ctstate NEW --match tcp --protocol tcp --dport    22 --jump ACCEPT
+${IPT} --append INPUT       --in-interface  ${DOCKERNET0_IF}   --source ${DOCKERNET0_PFIX} \
+    --match conntrack --ctstate NEW --match tcp --protocol tcp --dport    22 --jump ACCEPT
+#### for Responder
+#${IPT} --append INPUT       --in-interface  ${LOCALNET0_IF}    --source ${VPNSITE01_PFIX} \
+#    --match conntrack --ctstate NEW --match tcp --protocol tcp --dport    22 --jump ACCEPT
+${IPT} --append INPUT       --in-interface  ${LOCALNET0_IF}    --source ${VPNSITE02_PFIX} \
+    --match conntrack --ctstate NEW --match tcp --protocol tcp --dport    22 --jump ACCEPT
+### ipsec
+${IPT} --append INPUT       --in-interface  ${LOCALNET0_IF}  --match conntrack --ctstate NEW --match udp --protocol udp --dport   500 --jump ACCEPT
+${IPT} --append INPUT       --in-interface  ${LOCALNET0_IF}  --match conntrack --ctstate NEW --match udp --protocol udp --dport  4500 --jump ACCEPT
+
+## for Client
+### ipsec
+${IPT} --append OUTPUT      --out-interface ${LOCALNET0_IF}  --match conntrack --ctstate NEW --match udp --protocol udp --dport   500 --jump ACCEPT
+${IPT} --append OUTPUT      --out-interface ${LOCALNET0_IF}  --match conntrack --ctstate NEW --match udp --protocol udp --dport  4500 --jump ACCEPT
+### 一般的に使うであろうアプリケーション
+${IPT} --append OUTPUT      --out-interface ${LOCALNET0_IF}  --match conntrack --ctstate NEW --match tcp --protocol tcp --dport    22 --jump ACCEPT
+${IPT} --append OUTPUT      --out-interface ${LOCALNET0_IF}  --match conntrack --ctstate NEW --match udp --protocol udp --dport    53 --jump ACCEPT
+${IPT} --append OUTPUT      --out-interface ${LOCALNET0_IF}  --match conntrack --ctstate NEW --match tcp --protocol tcp --dport    53 --jump ACCEPT
+${IPT} --append OUTPUT      --out-interface ${LOCALNET0_IF}  --match conntrack --ctstate NEW --match tcp --protocol tcp --dport    80 --jump ACCEPT
+${IPT} --append OUTPUT      --out-interface ${LOCALNET0_IF}  --match conntrack --ctstate NEW --match udp --protocol udp --dport   123 --jump ACCEPT
+${IPT} --append OUTPUT      --out-interface ${LOCALNET0_IF}  --match conntrack --ctstate NEW --match tcp --protocol tcp --dport   443 --jump ACCEPT
+${IPT} --append OUTPUT      --out-interface ${LOCALNET0_IF}  --match conntrack --ctstate NEW --match tcp --protocol tcp --dport  3128 --jump ACCEPT
+${IPT} --append OUTPUT      --out-interface ${LOCALNET0_IF}  --match conntrack --ctstate NEW --match tcp --protocol tcp --dport  8080 --jump ACCEPT
+
+## for Docker Container
+${IPT} --append DOCKER-USER --in-interface  ${DOCKERNET0_IF} --match conntrack --ctstate NEW --match tcp --protocol tcp --dport    22 --jump ACCEPT
+${IPT} --append DOCKER-USER --in-interface  ${DOCKERNET0_IF} --match conntrack --ctstate NEW --match udp --protocol udp --dport    53 --jump ACCEPT
+${IPT} --append DOCKER-USER --in-interface  ${DOCKERNET0_IF} --match conntrack --ctstate NEW --match tcp --protocol tcp --dport    53 --jump ACCEPT
+${IPT} --append DOCKER-USER --in-interface  ${DOCKERNET0_IF} --match conntrack --ctstate NEW --match tcp --protocol tcp --dport    80 --jump ACCEPT
+${IPT} --append DOCKER-USER --in-interface  ${DOCKERNET0_IF} --match conntrack --ctstate NEW --match tcp --protocol tcp --dport   443 --jump ACCEPT
+${IPT} --append DOCKER-USER --in-interface  ${DOCKERNET0_IF} --match conntrack --ctstate NEW --match tcp --protocol tcp --dport  3128 --jump ACCEPT
+${IPT} --append DOCKER-USER --in-interface  ${DOCKERNET0_IF} --match conntrack --ctstate NEW --match tcp --protocol tcp --dport  8080 --jump ACCEPT
+
+## ICMP
+${IPT} --append INPUT  --in-interface  ${LOCALNET0_IF} --protocol icmp --icmp-type echo-request --jump PING_OF_DEATH
+${IPT} --append INPUT  --in-interface  ${LOCALNET0_IF} --protocol icmp --icmp-type any --jump ACCEPT
+${IPT} --append OUTPUT --out-interface ${LOCALNET0_IF} --protocol icmp --icmp-type any --jump ACCEPT
+${IPT} --append INPUT                                  --protocol icmp --icmp-type any --jump ACCEPT
+${IPT} --append OUTPUT                                 --protocol icmp --icmp-type any --jump ACCEPT
+
+## Tacit Rules
+${IPT} --append INPUT       --jump LOG_INCOMINGv4
+${IPT} --append OUTPUT      --jump LOG_OUTGOINGv4
+${IPT} --append FORWARD     --jump LOG_FORWARDINGv4
+${IPT} --append DOCKER-USER --jump LOG_DOCKERUSERv4
+

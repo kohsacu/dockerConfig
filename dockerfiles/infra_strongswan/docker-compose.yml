@@ -1,0 +1,34 @@
+version: "3.7"
+
+services:
+    strongswan:
+        env_file:
+            - ./.env
+        build:
+            context: .
+            dockerfile: Dockerfile
+            args:
+                - STRONGSWAN_VERSION=${STRONGSWAN_VERSION}
+        container_name: ${CONTAINER}
+        hostname: ${CONTAINER}
+        image: ${REPOSITORY}:${TAG}
+        restart: always
+        tty: true
+        privileged: true
+        #cap_add:
+        #    - NET_ADMIN
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - /lib/modules:/lib/modules:ro
+            - ${PATH_DOCKER_VOLUME}/${CONTAINER}/init.d:/opt/local/etc/init.d
+            - ${PATH_DOCKER_VOLUME}/${CONTAINER}/ipsec.d:/etc/ipsec.d
+            - ${PATH_DOCKER_VOLUME}/${CONTAINER}/strongswan.d/charon/kernel-netlink.conf:/etc/strongswan.d/charon/kernel-netlink.conf
+            - ${PATH_DOCKER_VOLUME}/${CONTAINER}/strongswan.certs:/var/opt/strongswan.certs
+        logging:
+            driver: "syslog"
+            options:
+                #syslog-address: udp://172.17.0.1:514
+                syslog-facility: "daemon"
+                tag: "{{.DaemonName}}/{{.ImageName}}/{{.Name}}"
+        network_mode: "host"
+

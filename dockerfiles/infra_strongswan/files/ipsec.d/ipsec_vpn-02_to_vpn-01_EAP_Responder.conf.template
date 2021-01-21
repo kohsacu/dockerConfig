@@ -1,0 +1,32 @@
+conn vpn-02_to_vpn-01_EAP
+    also=common
+    keyexchange=ikev2
+    ike=chacha20poly1305-prfsha256-curve25519,chacha20poly1305-prfsha512-curve25519,aes256gcm16-sha384-ecp384,aes256gcm16-aesxcbc-curve25519,aes256-sha256-ecp384
+    esp=chacha20poly1305-curve25519,aes256gcm16,aes256-sha256
+    #rekey=no
+    #auto=add           # conn %default
+    #auto=start         # for Initiator
+    closeaction=clear
+    #dpdaction=clear    # conn %default
+    #dpdaction=restart  # for Initiator
+    #dpddelay=60s       # conn %default
+
+    #leftauth=pubkey                            # conn common
+    leftsendcert=always
+    #leftcert=SrvCert_vpn-01.kvm0241.global.pem # conn common
+    #leftid=vpn-01.kvm0241.global               # conn common
+    left=172.31.241.251
+    leftsubnet=172.31.241.0/24
+    leftfirewall=yes
+
+    right=%any
+    rightsendcert=never
+    rightid=vpn-02.kvm0242.global
+    rightsubnet=172.31.242.0/24
+    rightfirewall=yes
+    # Pool-IP addr
+    rightsourceip=100.64.0.2/32
+    # accont [ipsec.secrets]
+    rightauth=eap-mschapv2
+    eap_identity=vpn-02.kvm0242.global
+
