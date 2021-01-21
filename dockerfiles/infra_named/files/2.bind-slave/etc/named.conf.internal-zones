@@ -1,0 +1,29 @@
+zone "kvm0241.local" IN {
+    type slave;
+    file "zones-slave/kvm0241.local.zones";
+    masters {
+        172.31.242.152;
+    };
+};
+zone "kvm0242.local" IN {
+    type slave;
+    file "zones-slave/kvm0242.local.zones";
+    masters {
+        172.31.242.152;
+    };
+};
+zone "241.31.172.in-addr.arpa" {
+    type slave;
+    file "zones-slave/172.31.241.0_24.revs";
+    masters {
+        172.31.242.152;
+    };
+};
+zone "242.31.172.in-addr.arpa" {
+    type slave;
+    file "zones-slave/172.31.242.0_24.revs";
+    masters {
+        172.31.242.152;
+    };
+};
+

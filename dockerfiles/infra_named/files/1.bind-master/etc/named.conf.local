@@ -1,0 +1,34 @@
+//
+// Do any local configuration here
+//
+
+// Consider adding the 1918 zones here, if they are not used in your
+// organization
+//include "/etc/bind/zones.rfc1918";
+
+acl "kvm0241.local" {
+		172.31.241.0/24;
+};
+acl "kvm0242.local" {
+		172.31.242.0/24;
+};
+
+view internal {
+	match-clients {
+		localhost;
+		localnets;
+		kvm0241.local;
+		kvm0242.local;
+	};
+	match-destinations {
+		localhost;
+		localnets;
+		kvm0241.local;
+		kvm0242.local;
+	};
+	recursion yes;
+	include "/etc/bind/named.conf.internal-zones";
+	include "/etc/bind/zones.rfc1918";
+	include "/etc/bind/named.conf.default-zones";
+};
+

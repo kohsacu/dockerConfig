@@ -1,0 +1,34 @@
+version: "3.7"
+
+services:
+    int-named:
+        env_file:
+            - ./.env
+        build:
+            context: .
+            dockerfile: Dockerfile
+            args:
+                - NAMED_VERSION=${NAMED_VERSION}
+        container_name: ${CONTAINER}
+        hostname: ${CONTAINER}
+        image: ${REPOSITORY}:${TAG}
+        restart: always
+        #tty: true
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - ${PATH_DOCKER_VOLUME}/${CONTAINER}/etc/bind/named.conf:/etc/bind/named.conf
+            - ${PATH_DOCKER_VOLUME}/${CONTAINER}/etc/bind/named.conf.local:/etc/bind/named.conf.local
+            - ${PATH_DOCKER_VOLUME}/${CONTAINER}/etc/bind/named.conf.options:/etc/bind/named.conf.options
+            - ${PATH_DOCKER_VOLUME}/${CONTAINER}/etc/bind/named.conf.internal-zones:/etc/bind/named.conf.internal-zones
+            - ${PATH_DOCKER_VOLUME}/${CONTAINER}/var/cache/bind/:/var/cache/bind/
+        logging:
+            driver: "syslog"
+            options:
+                #syslog-address: udp://172.17.0.1:514
+                syslog-facility: "daemon"
+                tag: "{{.DaemonName}}/{{.ImageName}}/{{.Name}}"
+        ports:
+            - "${NAMED_PUBLIC}:53/udp"
+            - "${NAMED_PUBLIC}:53/tcp"
+        network_mode: "bridge"
+

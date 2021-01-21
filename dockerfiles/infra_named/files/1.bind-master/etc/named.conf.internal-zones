@@ -1,0 +1,53 @@
+zone "kvm0241.local" IN {
+	type master;
+	file "zones-master/kvm0241.local.zones";
+	allow-transfer {
+		172.31.241.151;
+		172.31.242.153;
+	};
+	also-notify {
+		172.31.241.151;
+		172.31.242.153;
+	};
+	notify yes;
+};
+zone "kvm0242.local" IN {
+	type master;
+	file "zones-master/kvm0242.local.zones";
+	allow-transfer {
+		172.31.241.151;
+		172.31.242.153;
+	};
+	also-notify {
+		172.31.241.151;
+		172.31.242.153;
+	};
+	notify yes;
+};
+zone "241.31.172.in-addr.arpa" {
+	type master;
+	file "zones-master/172.31.241.0_24.revs";
+	allow-transfer {
+		172.31.241.151;
+		172.31.242.153;
+	};
+	also-notify {
+		172.31.241.151;
+		172.31.242.153;
+	};
+	notify yes;
+};
+zone "242.31.172.in-addr.arpa" {
+	type master;
+	file "zones-master/172.31.242.0_24.revs";
+	allow-transfer {
+		172.31.241.151;
+		172.31.242.153;
+	};
+	also-notify {
+		172.31.241.151;
+		172.31.242.153;
+	};
+	notify yes;
+};
+
