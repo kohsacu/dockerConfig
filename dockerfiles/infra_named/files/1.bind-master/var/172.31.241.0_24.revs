@@ -1,0 +1,25 @@
+$ORIGIN .
+$TTL 3600    ; 1 hour
+241.31.172.in-addr.arpa    IN SOA  int-ns1.kvm0242.local. root.kvm0241.local. (
+                                   2021012301 ; Serial
+                                   3600       ; Refresh (1 hour)
+                                   1200       ; Retry (20 minutes)
+                                   1209600    ; Expire (2 weeks)
+                                   900        ; Minimum (15 minutes)
+                                   )
+;;
+                              NS   int-ns1.kvm0242.local.
+                              NS   int-ns2.kvm0242.local.
+                              NS   int-ns3.kvm0241.local.
+                              PTR  kvm0241.local.
+;;
+$ORIGIN 241.31.172.in-addr.arpa.
+172.31.242.152                PTR  int-ns1.kvm0242.local.
+172.31.242.153                PTR  int-ns2.kvm0242.local.
+151                           PTR  int-ns3.kvm0241.local.
+1                             PTR  cpe.kvm0241.local.
+151                           PTR  ubu2004x01.kvm0241.local.
+250                           PTR  mail.kvm0241.local.
+251                           PTR  docker-01.kvm0241.local.
+254                           PTR  br-kvm-host.kvm0241.local.
+

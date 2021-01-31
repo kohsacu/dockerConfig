@@ -1,0 +1,26 @@
+$ORIGIN .
+$TTL 3600    ; (1 hour)
+kvm0242.local    IN SOA  int-ns1.kvm0242.local. root.kvm0241.local. (
+                         2021012301; Serial
+                         3600      ; Refresh (1 hour)
+                         1200      ; Retry (20 minutes)
+                         1209600   ; Expire (2 weeks)
+                         900       ; Minimum (15 minutes)
+                         )
+
+                    NS   int-ns1.kvm0242.local.
+                    NS   int-ns2.kvm0242.local.
+                    NS   int-ns3.kvm0241.local.
+                    MX   10 mail.kvm0241.local.
+;;
+;;
+$ORIGIN kvm0242.local.
+int-ns1             A    172.31.242.152
+int-ns2             A    172.31.242.153
+int-ns3             A    172.31.241.151
+cpe                 A    172.31.242.1
+ubu2004x02          A    172.31.242.152
+ubu2004x03          A    172.31.242.153
+docker-02           A    172.31.242.251
+br-kvm-host         A    172.31.242.254
+
