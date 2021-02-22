@@ -3,7 +3,7 @@
 # 
 # == env ==
 # 
-SAVE='/usr/sbin/ip6tables-save'
+SAVE='/sbin/ip6tables-save'
 OUT_FILE='/etc/iptables/rules.v6'
 
 ## boot-time loader for netfilter rules

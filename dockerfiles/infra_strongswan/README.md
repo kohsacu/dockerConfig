@@ -258,7 +258,7 @@ example for docker-01.
   ```
 - start container
   ```bash
-  $ sudo docker-compose up -d
+  $ sudo docker-compose up -d --build
   ```
 
 ### Certs files for strongSwan
