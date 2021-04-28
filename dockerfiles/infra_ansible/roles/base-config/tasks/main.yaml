@@ -12,7 +12,7 @@
   tags:
     - group_docker-join
   with_items:
-    - "{{ ansible_ssh_user }}"
+    - "{{ ansible_user }}"
 
 - name: Check docker group
   shell: grep docker /etc/group

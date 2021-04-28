@@ -75,6 +75,7 @@ RUN set -x \
   && : "== Setup python-vEnv ==" \
   && python3 -m venv ansible \
   && . ansible/bin/activate \
+  && pip install --upgrade pip \
   && pip install --no-cache-dir --upgrade pip setuptools \
   && pip install --no-cache-dir --requirement /root/requirements.txt \
   && ln -s "${PYTHON_VENV_DIR}"/ansible/bin/ansible          ${ANSIBLE_BIN_DIR}/ \
