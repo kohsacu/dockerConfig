@@ -2,9 +2,9 @@
 
 ## ポリシー
 
+* 可搬性は無視しコンフィグファイル等は `bind mount` でコンテナに見せる
 * いわゆる `docker0` ブリッジはコンテナ内の apt や git clone でのみ使用する
 * コンテナ間や対向装置との通信は、別途 `docker network connect` で接続するブリッジを使用する
-* ssh サーバはインストールせず `exec -it sh` にてコンテナ内の作業を実施する
 
 # コンテナ作成手順
 
@@ -41,8 +41,7 @@ Server: Docker Engine - Community
 
 ホスト側のディレクトリを作成する。
 ```
-$ sudo mkdir -p /export/home1/docker.volume \
-> && sudo chown 1000:1000 $_
+$ sudo mkdir -p /var/opt/docker.volume
 ```
 
 ### Dockerfile の作成
@@ -145,16 +144,16 @@ ubuntu              18.04               1d9c17228a9e        5 weeks ago         
 コンテナ起動時に実行したいスクリプトを volume 配下に配置する。
 ```
 $ CONTAINER="victim03"
-$ sudo mkdir -p /export/home1/docker.volume/${CONTAINER}/init.d
+$ sudo mkdir -p /var/opt/docker.volume/${CONTAINER}/init.d
 $ sudo cp -ip ./common/static-routes.sh $_
-$ sudo chown -R 1000:1000 /export/home1/docker.volume/${CONTAINER}
+$ sudo chown -R 1000:1000 /var/opt/docker.volume/${CONTAINER}
 $ ls -lR $_
 ```
 ```
 $ CONTAINER="attacker03"
-$ sudo mkdir -p /export/home1/docker.volume/${CONTAINER}/init.d
+$ sudo mkdir -p /var/opt/docker.volume/${CONTAINER}/init.d
 $ sudo cp -ip ./common/static-routes.sh $_
-$ sudo chown -R 1000:1000 /export/home1/docker.volume/${CONTAINER}
+$ sudo chown -R 1000:1000 /var/opt/docker.volume/${CONTAINER}
 $ ls -lR $_
 ```
 run ではなく create と start を別々に実施する。
@@ -163,7 +162,7 @@ $ CONTAINER="victim03"
 $ sudo docker create \
 > --name ${CONTAINER} --hostname ${CONTAINER} \
 > --interactive --user=0:0 \
-> --volume /export/home1/docker.volume/${CONTAINER}:/home/devel/volume \
+> --volume /var/opt/docker.volume/${CONTAINER}:/home/devel/volume \
 > --cap-add=NET_ADMIN \
 > ${REPOSITORY}:${TAG}
 ```
@@ -218,11 +217,11 @@ $ sudo docker network connect --ip 10.32.201.13 br_atk0201 ${CONTAINER}
 スクリプトを修正する。
 ```
 DOCKER-HOST:~$ CONTAINER="victim03"
-DOCKER-HOST:~$ sudo perl -pi -e 's/NEXT-HOP/172.31.11.254/' /export/home1/docker.volume/${CONTAINER}/init.d/static-routes.sh
+DOCKER-HOST:~$ sudo perl -pi -e 's/NEXT-HOP/172.31.11.254/' /var/opt/docker.volume/${CONTAINER}/init.d/static-routes.sh
 DOCKER-HOST:~$ vim $_
 (..or..)
 DOCKER-HOST:~$ CONTAINER="attacker03"
-DOCKER-HOST:~$ sudo perl -pi -e 's/NEXT-HOP/10.32.201.254/' /export/home1/docker.volume/${CONTAINER}/init.d/static-routes.sh
+DOCKER-HOST:~$ sudo perl -pi -e 's/NEXT-HOP/10.32.201.254/' /var/opt/docker.volume/${CONTAINER}/init.d/static-routes.sh
 DOCKER-HOST:~$ vim $_
 ```
 
@@ -297,7 +296,7 @@ deb http://security.ubuntu.com/ubuntu/ bionic-security universe
 deb http://security.ubuntu.com/ubuntu/ bionic-security multiverse
 ```
 ```
-$ LANG=en_US ls -aln /export/home1/docker.volume/${CONTAINER}/
+$ LANG=en_US ls -aln /var/opt/docker.volume/${CONTAINER}/
 total 12
 drwxr-xr-x 3 1000 1000 4096 Jan 30 02:18 .
 drwxr-xr-x 6 1000 1000 4096 Jan 30 02:09 ..
@@ -314,7 +313,7 @@ drwxr-xr-x 2 1000 1000 4096 Jan 29 17:13 init.d
 -rw-r--r-- 1    0    0    0 Jan 29 17:19 root
 -rw-r--r-- 1 1000 1000    0 Jan 29 17:19 user
 
-$ LANG=en_US ls -aln /export/home1/docker.volume/${CONTAINER}/
+$ LANG=en_US ls -aln /var/opt/docker.volume/${CONTAINER}/
 total 12
 drwxr-xr-x 3 1000 1000 4096 Jan 30 02:19 .
 drwxr-xr-x 6 1000 1000 4096 Jan 30 02:09 ..

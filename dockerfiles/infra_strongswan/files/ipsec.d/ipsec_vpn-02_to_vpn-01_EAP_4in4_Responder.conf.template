@@ -19,7 +19,7 @@ conn vpn-02_to_vpn-01_EAP
     leftsubnet=172.31.241.0/24
     leftfirewall=yes
 
-    right=%any
+    right=vpn-02.kvm0242.global
     rightsendcert=never
     rightid=vpn-02.kvm0242.global
     rightsubnet=172.31.242.0/24

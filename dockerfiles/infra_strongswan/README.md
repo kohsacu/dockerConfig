@@ -1,6 +1,11 @@
 # strongswan (IPsec VPN Server) on docker
 
 ## IPSec Testbed on KVM
+- IPv4 in IPv4 tunnel mode
+  - HGW 等の配下に docker host を配置
+  - `500/udp` と `4500/udp` を HGW 等で PortMapping
+- IPv4 in IPv6 tunnel mode
+  - MAP-E 等の `500/udp` と `4500/udp` が開放出来ない環境を想定
 
 ### Network Design
 
@@ -9,22 +14,24 @@
                                       | KVM  Host |
                                       +-----+-----+
                                             |(.254)
-                                     [10.128.0.0/24]
+                                     [10.128.4.0/24]
+                                   [fdee:10:128:0::/64]
                ----+------------------(br_unTrust0)----------------+----
                    |[vpn-01.kvm0241.global]                        |[vpn-02.kvm0242.global]
-             <NAPT>|[eth0](.101)                             <NAPT>|[eth0](.102)
+             <NAPT>|[eth0](.101,:101)                        <NAPT>|[eth0](.102,:102)
              +-----+-----+                                   +-----+-----+
              |  VyOS-01  |                                   |  VyOS-02  |
              +-----+-----+                                   +-----+-----+
-                   |[eth1](.1)                                     |[eth1](.1)
+                   |[eth1](.1,:1)                                  |[eth1](.1,:1)
                    |[172.31.241.0/24]                              |[172.31.242.0/24]
+                   |[fdee:172:31:241::/64]                         |[fdee:172:31:242::/64]
         +----(br_kvm0241)----+                           +----(br_kvm0242)----+
-        |(.151)              |(.251)                     |(.251)              |(.152)
+        |(.151,:151)         |(.251,:251)                |(.251,:251)         |(.152,:152)
   +-----+------+    +--------+---------+        +--------+---------+    +-----+------+
   | ubu2004x01 |    |    docker-01     |        |    docker-02     |    | ubu2004x02 |
   +------------+    | +--------------+ |        | +--------------+ |    +------------+
                     | | strongswan01 | |        | | strongswan02 | |
-                    | | (responder)  | |        | | (initiator)  | |
+                    | | (Responder)  | |        | | (Initiator)  | |
                     | +--------------+ |        | +--------------+ |
                     +------------------+        +------------------+
 ```
@@ -66,6 +73,7 @@
   Done
   [edit]
   # exit
+  $ 
   ```
   </div></details>
 
@@ -77,9 +85,11 @@ example for docker-01.
 - resolve
   ```bash
   $ sudo vim /etc/hosts
-  $ grep 10.128.0 /etc/hosts
-  10.128.0.101 vpn-01.kvm0241.global
-  10.128.0.102 vpn-02.kvm0242.global
+  $ grep 10.128.4 /etc/hosts
+  10.128.4.101         vpn-01.kvm0241.global
+  10.128.4.102         vpn-02.kvm0242.global
+  fdee:172:31:241::251 vpn-01.kvm0241.global
+  fdee:172:31:242::251 vpn-02.kvm0242.global
   ```
 - interface
   <details><summary>50-cloud-init.yaml</summary><div>
@@ -89,37 +99,39 @@ example for docker-01.
     version: 2
     ethernets:
       enp1s0:
+        accept-ra: false
         dhcp4: false
         dhcp6: false
-        accept-ra: false
         addresses:
-          - 172.31.241.251/24
+        - 172.31.241.251/24
+        - 'fdee:172:31:241::251/64'
         gateway4: 172.31.241.1
+        gateway6: 'fdee:172:31:241::1'
         nameservers:
           addresses:
             - 8.8.8.8
             - 8.8.8.4
           search:
-            - kvm0241.local
-        routes:
-            - to: 10.128.0.0/24
-              via: 172.31.241.1
+            - kvm0241.internal
+        #routes:
+        #- to: 10.128.4.0/24
+        #  via: 172.31.241.1
   ```
   </div></details>
 
 - route
   ```bash
   $ sudo vim /etc/netplan/50-cloud-init.yaml
-  $ grep -B1 -A1 10.128.0 /etc/netplan/50-cloud-init.yaml
-              routes:
-                  - to: 10.128.0.0/24
-                    via: 172.31.241.1
   $ sudo netplan apply
-  $ ip route show
+  $ ip -4 route show
   default via 172.31.241.1 dev enp1s0 proto static
-  10.128.0.0/24 via 172.31.241.1 dev enp1s0 proto static
   172.17.0.0/16 dev docker0 proto kernel scope link src 172.17.0.1 linkdown
   172.31.241.0/24 dev enp1s0 proto kernel scope link src 172.31.241.251
+  $ ip -6 route show
+  ::1 dev lo proto kernel metric 256 pref medium
+  fdee:172:31:241::/64 dev enp1s0 proto kernel metric 256 pref medium
+  fe80::/64 dev enp1s0 proto kernel metric 256 pref medium
+  default via fdee:172:31:241::1 dev enp1s0 proto static metric 1024 pref medium
   ```
 
 #### kernel parameters
@@ -142,6 +154,10 @@ example for docker-01.
   0
   $ cat /proc/sys/net/ipv4/conf/all/rp_filter
   2
+  $ cat /proc/sys/net/ipv4/conf/all/send_redirects
+  0
+  $ cat /proc/sys/net/ipv4/conf/default/send_redirects
+  0
   $ cat /proc/sys/net/ipv4/conf/default/accept_source_route
   0
   $ cat /proc/sys/net/ipv4/icmp_ignore_bogus_error_responses
@@ -178,14 +194,14 @@ example for docker-01.
 #### rsyslog(Optional)
 - rsyslog
   ```bash
-  $ cat ./files/rsyslog/20-iptables.conf | sudo tee /etc/rsyslog.d/20-iptables.conf
+  $ cat ./files/rsyslog/20-iptables.conf | sudo tee -a /etc/rsyslog.d/20-iptables.conf
   :msg, contains, "[iptables: "  -/var/log/iptables.log
   & stop
   :msg, contains, "[ip6tables: " -/var/log/iptables.log
   & stop
   ```
   ```bash
-  $ cat ./files/rsyslog/30-docker.conf | sudo tee /etc/rsyslog.d/30-docker.conf
+  $ cat ./files/rsyslog/30-docker.conf | sudo tee -a /etc/rsyslog.d/30-docker.conf
   :syslogtag, startswith, "docker/local-repo/infra/strongswan:" /var/log/container-strongswan.log
   & stop
   :syslogtag, startswith, "docker/" /var/log/docker-container.log
@@ -239,26 +255,60 @@ example for docker-01.
 
 ### Build & Up strongSwan Container
 
-example for docker-01.
-- build
-  ```bash
-  $ cp -ip .env{.example,}
-  $ sed -i '/^CONTAINER=strongswan/s/00/01/' ./.env
-  $ diff -us .env{.example,}
-  (..snip..)
-   STRONGSWAN_VERSION=5.8.2-1ubuntu3.1
-  -CONTAINER=strongswan00
-  +CONTAINER=strongswan01
-   PATH_DOCKER_VOLUME=/var/opt/docker.volume
-  $ sudo docker-compose build
-  ```
+example for docker-01(Responder).
+- `.env` file
+  - for focal
+    ```bash
+    $ cp -ip .env{.example,}
+    $ sed -i '/^CONTAINER=strongswan/s/00/01/' ./.env
+    $ diff -us .env{.example,}
+    (..snip..)
+    @@ -6,6 +6,6 @@
+     # https://packages.ubuntu.com/bionic-updates/strongswan
+     #STRONGSWAN_VERSION=5.6.2-1ubuntu2.5
+     #TAG=5.6.2-1
+    -CONTAINER=strongswan00
+    +CONTAINER=strongswan01
+     PATH_DOCKER_VOLUME=/var/opt/docker.volume
+    
+    ```
+  - for bionic
+    ```bash
+    @@ -1,11 +1,11 @@
+     # Build Arguments
+     REPOSITORY=local-repo/infra/strongswan
+     # https://packages.ubuntu.com/focal-updates/strongswan
+    -STRONGSWAN_VERSION=5.8.2-1ubuntu3.1
+    -TAG=5.8.2-1
+    +#STRONGSWAN_VERSION=5.8.2-1ubuntu3.1
+    +#TAG=5.8.2-1
+     # https://packages.ubuntu.com/bionic-updates/strongswan
+    -#STRONGSWAN_VERSION=5.6.2-1ubuntu2.5
+    -#TAG=5.6.2-1
+    -CONTAINER=strongswan00
+    +STRONGSWAN_VERSION=5.6.2-1ubuntu2.5
+    +TAG=5.6.2-1
+    +CONTAINER=strongswan02
+     PATH_DOCKER_VOLUME=/var/opt/docker.volume
+    
+    ```
 - Create docker bind mount directory
   ```bash
   $ ./volume.sh
   ```
+- Select Dockerfile
+  ```bash
+  $ cp -ip ./Dockerfile{-$(lsb_release --codename | awk '{print $2}'),}
+  ```
+  ```bash
+  $ grep ^FROM ./Dockerfile
+  FROM ubuntu:20.04
+  or
+  FROM ubuntu:18.04
+  ```
 - start container
   ```bash
-  $ sudo docker-compose up -d
+  $ sudo docker-compose up -d --build
   ```
 
 ### Certs files for strongSwan
@@ -267,58 +317,76 @@ example for docker-01.
 
 ### strongSwan drop-in files
 
-- docker-01
-  ```bash
-  $ cp -ip ./files/ipsec.d/ipsec_common.conf{.template,}
-  $ sed -i 's/vpn-00.kvm0255/vpn-01.kvm0241/' ./files/ipsec.d/ipsec_common.conf
-  $ diff -us ./files/ipsec.d/ipsec_common.conf{.template,}
-  --- ./files/ipsec.d/ipsec_common.conf.template  2020-11-03 22:26:57.868982201 +0900
-  +++ ./files/ipsec.d/ipsec_common.conf   2020-11-04 02:12:00.196275031 +0900
-  @@ -1,7 +1,7 @@
-   conn common
-  -    leftcert=SrvCert_vpn-00.kvm0255.global.pem
-  +    leftcert=SrvCert_vpn-01.kvm0241.global.pem
-       #leftsourceip=%config
-  -    leftid=vpn-00.kvm0255.global
-  +    leftid=vpn-01.kvm0241.global
-       leftauth=pubkey
-       leftfirewall=yes
-  $ sudo mv -i ./files/ipsec.d/ipsec_common.conf /var/opt/docker.volume/strongswan01/ipsec.d
-  ```
-  ```bash
-  $ cp -ip ./files/ipsec.d/ipsec_vpn-02_to_vpn-01_EAP_Responder.conf{.template,}
-  $ sudo mv -i ./files/ipsec.d/ipsec_vpn-02_to_vpn-01_EAP_Responder.conf /var/opt/docker.volume/strongswan01/ipsec.d/
-  ```
-  ```bash
-  $ echo ": RSA $(sudo ls -1 /var/opt/docker.volume/strongswan01/ipsec.d/private/)" | \
-  > sudo tee -a /var/opt/docker.volume/strongswan01/ipsec.d/ipsec_RSA.secrets
-  ```
-- docker-02
-  ```bash
-  $ cp -ip ./files/ipsec.d/ipsec_common.conf{.template,}
-  $ sed -i 's/vpn-00.kvm0255/vpn-02.kvm0242/' ./files/ipsec.d/ipsec_common.conf
-  $ diff -us ./files/ipsec.d/ipsec_common.conf{.template,}
-  --- ./files/ipsec.d/ipsec_common.conf.template  2020-11-03 22:27:17.306813871 +0900
-  +++ ./files/ipsec.d/ipsec_common.conf   2020-11-04 02:21:29.696572659 +0900
-  @@ -1,7 +1,7 @@
-   conn common
-  -    leftcert=SrvCert_vpn-00.kvm0255.global.pem
-  +    leftcert=SrvCert_vpn-02.kvm0242.global.pem
-       #leftsourceip=%config
-  -    leftid=vpn-00.kvm0255.global
-  +    leftid=vpn-02.kvm0242.global
-       leftauth=pubkey
-       leftfirewall=yes
-  $ sudo mv -i ./files/ipsec.d/ipsec_common.conf /var/opt/docker.volume/strongswan02/ipsec.d
-  ```
-  ```bash
-  $ cp -ip ./files/ipsec.d/ipsec_vpn-02_to_vpn-01_EAP_Initiator.conf{.template,}
-  $ sudo mv -i ./files/ipsec.d/ipsec_vpn-02_to_vpn-01_EAP_Initiator.conf /var/opt/docker.volume/strongswan02/ipsec.d/
-  ```
-  ```bash
-  $ echo ": RSA $(sudo ls -1 /var/opt/docker.volume/strongswan02/ipsec.d/private/)" | \
-  > sudo tee -a /var/opt/docker.volume/strongswan02/ipsec.d/ipsec_RSA.secrets
-  ```
+- docker-01(Responder)
+  - ipsec_common.conf
+    ```bash
+    $ cp -ip ./files/ipsec.d/ipsec_common.conf{.template,}
+    $ sed -i 's/vpn-00.kvm0255/vpn-01.kvm0241/' ./files/ipsec.d/ipsec_common.conf
+    $ diff -us ./files/ipsec.d/ipsec_common.conf{.template,}
+    --- ./files/ipsec.d/ipsec_common.conf.template  2020-11-03 22:26:57.868982201 +0900
+    +++ ./files/ipsec.d/ipsec_common.conf   2020-11-04 02:12:00.196275031 +0900
+    @@ -1,7 +1,7 @@
+     conn common
+    -    leftcert=SrvCert_vpn-00.kvm0255.global.pem
+    +    leftcert=SrvCert_vpn-01.kvm0241.global.pem
+         #leftsourceip=%config
+    -    leftid=vpn-00.kvm0255.global
+    +    leftid=vpn-01.kvm0241.global
+         leftauth=pubkey
+         leftfirewall=yes
+    $ sudo mv -i ./files/ipsec.d/ipsec_common.conf /var/opt/docker.volume/strongswan01/ipsec.d
+    ```
+  - Choose either `IPv4 in IPv4` or `IPv4 in IPv6`
+    - IPv4 in IPv4 tunnel mode
+      ```bash
+      $ cp -ip ./files/ipsec.d/ipsec_vpn-02_to_vpn-01_EAP_4in4_Responder.conf{.template,}
+      $ sudo mv -i ./files/ipsec.d/ipsec_vpn-02_to_vpn-01_EAP_4in4_Responder.conf /var/opt/docker.volume/strongswan01/ipsec.d/
+      ```
+    - IPv4 in IPv6 tunnel mode
+      ```bash
+      $ cp -ip ./files/ipsec.d/ipsec_vpn-02_to_vpn-01_EAP_4in6_Responder.conf{.template,}
+      $ sudo mv -i ./files/ipsec.d/ipsec_vpn-02_to_vpn-01_EAP_4in6_Responder.conf /var/opt/docker.volume/strongswan01/ipsec.d/
+      ```
+  - private key
+    ```bash
+    $ echo ": RSA $(sudo ls -1 /var/opt/docker.volume/strongswan01/ipsec.d/private/)" | \
+    > sudo tee -a /var/opt/docker.volume/strongswan01/ipsec.d/ipsec_RSA.secrets
+    ```
+- docker-02(Initiator)
+  - ipsec_common.conf
+    ```bash
+    $ cp -ip ./files/ipsec.d/ipsec_common.conf{.template,}
+    $ sed -i 's/vpn-00.kvm0255/vpn-02.kvm0242/' ./files/ipsec.d/ipsec_common.conf
+    $ diff -us ./files/ipsec.d/ipsec_common.conf{.template,}
+    --- ./files/ipsec.d/ipsec_common.conf.template  2020-11-03 22:27:17.306813871 +0900
+    +++ ./files/ipsec.d/ipsec_common.conf   2020-11-04 02:21:29.696572659 +0900
+    @@ -1,7 +1,7 @@
+     conn common
+    -    leftcert=SrvCert_vpn-00.kvm0255.global.pem
+    +    leftcert=SrvCert_vpn-02.kvm0242.global.pem
+         #leftsourceip=%config
+    -    leftid=vpn-00.kvm0255.global
+    +    leftid=vpn-02.kvm0242.global
+         leftauth=pubkey
+         leftfirewall=yes
+    $ sudo mv -i ./files/ipsec.d/ipsec_common.conf /var/opt/docker.volume/strongswan02/ipsec.d
+    ```
+  - Choose either `IPv4 in IPv4` or `IPv4 in IPv6`
+    - IPv4 in IPv4 tunnel mode
+      ```bash
+      $ cp -ip ./files/ipsec.d/ipsec_vpn-02_to_vpn-01_EAP_4in4_Initiator.conf{.template,}
+      $ sudo mv -i ./files/ipsec.d/ipsec_vpn-02_to_vpn-01_EAP_4in4_Initiator.conf /var/opt/docker.volume/  strongswan02/ipsec.d/
+      ```
+    - IPv4 in IPv6 tunnel mode
+      ```bash
+      $ cp -ip ./files/ipsec.d/ipsec_vpn-02_to_vpn-01_EAP_4in6_Initiator.conf{.template,}
+      $ sudo mv -i ./files/ipsec.d/ipsec_vpn-02_to_vpn-01_EAP_4in6_Initiator.conf /var/opt/docker.volume/strongswan02/ipsec.d/
+      ```
+  - private key
+    ```bash
+    $ echo ": RSA $(sudo ls -1 /var/opt/docker.volume/strongswan02/ipsec.d/private/)" | \
+    > sudo tee -a /var/opt/docker.volume/strongswan02/ipsec.d/ipsec_RSA.secrets
+    ```
 
 ### Apply strongSwan config
 
@@ -330,9 +398,9 @@ example for docker-01.
 
 ### Check configration
 
-- ipsec status
+- ipsec status(IPv4 in IPv4 tunnel mode)
   ```bash
-  $ sudo docker-compose exec strongswan ipsec statusall
+  devel@docker-01:~$ sudo docker-compose exec strongswan ipsec statusall
   Status of IKE charon daemon (strongSwan 5.8.2, Linux 5.4.0-52-generic, x86_64):
     uptime: 79 minutes, since Nov 12 01:13:18 2020
     malloc: sbrk 2019328, mmap 0, used 1156720, free 862608
@@ -355,7 +423,7 @@ example for docker-01.
   vpn-02_to_vpn-01_EAP:   remote: [vpn-02.kvm0242.global] uses EAP_MSCHAPV2 authentication with EAP identity '%any'
   vpn-02_to_vpn-01_EAP:   child:  172.31.241.0/24 === 172.31.242.0/24 TUNNEL, dpdaction=clear
   Security Associations (1 up, 0 connecting):
-  vpn-02_to_vpn-01_EAP[2]: ESTABLISHED 23 minutes ago, 172.31.241.251[vpn-01.kvm0241.global]...10.128.0.102[vpn-02.kvm0242.  global]
+  vpn-02_to_vpn-01_EAP[2]: ESTABLISHED 23 minutes ago, 172.31.241.251[vpn-01.kvm0241.global]...10.128.4.102[vpn-02.kvm0242.  global]
   vpn-02_to_vpn-01_EAP[2]: Remote EAP identity: vpn-02
   vpn-02_to_vpn-01_EAP[2]: IKEv2 SPIs: babd5b672356ca3f_i 2da4c5c86cf7150c_r*, public key reauthentication in 33 minutes
   vpn-02_to_vpn-01_EAP[2]: IKE proposal: AES_CBC_128/HMAC_SHA2_256_128/PRF_HMAC_SHA2_256/CURVE_25519
@@ -365,7 +433,7 @@ example for docker-01.
   ```
 - iptables
   ```bash
-  $ sudo iptables -nvL FORWARD --line-number
+  devel@docker-01:~$ sudo iptables -nvL FORWARD --line-number
   Chain FORWARD (policy DROP 0 packets, 0 bytes)
   num   pkts bytes target     prot opt in     out     source               destination
   1        0     0 ACCEPT     all  --  br_mgmt0 *       172.31.242.0/24      172.31.241.0/24      policy match dir in pol ipsec reqid 1 proto 50
@@ -375,6 +443,22 @@ example for docker-01.
   ```
 - route
   ```bash
-  $ ip route show table 220
+  devel@docker-01:~$ ip route show table 220
   172.31.242.0/24 via 172.31.241.1 dev br_mgmt0 proto static src 172.31.241.251 mtu 1374
+  ```
+- xfrm policy 
+  ```bash
+  devel@docker-01:~$ sudo ip xfrm policy | head -n 12
+  src 172.31.241.0/24 dst 172.31.242.0/24 
+          dir out priority 375423 
+          tmpl src 172.31.241.251 dst 10.128.4.102
+                  proto esp spi 0xc0312017 reqid 3 mode tunnel
+  src 172.31.242.0/24 dst 172.31.241.0/24 
+          dir fwd priority 375423 
+          tmpl src 10.128.4.102 dst 172.31.241.251
+                  proto esp reqid 3 mode tunnel
+  src 172.31.242.0/24 dst 172.31.241.0/24 
+          dir in priority 375423 
+          tmpl src 10.128.4.102 dst 172.31.241.251
+                  proto esp reqid 3 mode tunnel
   ```

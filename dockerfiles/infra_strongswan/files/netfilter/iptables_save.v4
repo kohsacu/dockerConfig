@@ -3,7 +3,7 @@
 # 
 # == env ==
 # 
-SAVE='/usr/sbin/iptables-save'
+SAVE='/sbin/iptables-save'
 OUT_FILE='/etc/iptables/rules.v4'
 
 ## boot-time loader for netfilter rules

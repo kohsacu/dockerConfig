@@ -71,8 +71,16 @@ ${IPT} --append OUTPUT      --out-interface ${LOCALNET0_IF}  --match conntrack -
 ## for Server
 ### sshd
 ${IPT} --append INPUT       --in-interface  ${LOCALNET0_IF}  --match conntrack --ctstate NEW --match tcp --protocol tcp --dport    22 --jump ACCEPT
+### ipsec
+${IPT} --append INPUT       --in-interface  ${LOCALNET0_IF}  --match conntrack --ctstate NEW --match udp --protocol udp --dport   500 --jump ACCEPT
+${IPT} --append INPUT       --in-interface  ${LOCALNET0_IF}  --match conntrack --ctstate NEW --match udp --protocol udp --dport  4500 --jump ACCEPT
+${IPT} --append INPUT       --in-interface  ${LOCALNET0_IF}                                              --protocol esp               --jump ACCEPT
 
 ## for Client
+### ipsec
+${IPT} --append OUTPUT      --out-interface ${LOCALNET0_IF}  --match conntrack --ctstate NEW --match udp --protocol udp --dport   500 --jump ACCEPT
+${IPT} --append OUTPUT      --out-interface ${LOCALNET0_IF}  --match conntrack --ctstate NEW --match udp --protocol udp --dport  4500 --jump ACCEPT
+${IPT} --append OUTPUT      --out-interface ${LOCALNET0_IF}                                              --protocol esp               --jump ACCEPT
 ### 一般的に使うであろうアプリケーション
 ${IPT} --append OUTPUT      --out-interface ${LOCALNET0_IF}  --match conntrack --ctstate NEW --match tcp --protocol tcp --dport    22 --jump ACCEPT
 ${IPT} --append OUTPUT      --out-interface ${LOCALNET0_IF}  --match conntrack --ctstate NEW --match udp --protocol udp --dport    53 --jump ACCEPT

@@ -146,5 +146,5 @@ ${IPT} --append OUTPUT                                 --protocol icmp --icmp-ty
 ${IPT} --append INPUT       --jump LOG_INCOMINGv4
 ${IPT} --append OUTPUT      --jump LOG_OUTGOINGv4
 ${IPT} --append FORWARD     --jump LOG_FORWARDINGv4
-${IPT} --append DOCKER-USER --jump LOG_DOCKERUSERv4
+#${IPT} --append DOCKER-USER --jump LOG_DOCKERUSERv4
 
