@@ -11,7 +11,7 @@
 ```bash
 $ vim ./Dockerfiles/requirements.txt
 ~
-ansible==2.9.7
+ansible==2.9.20
 ~
 :wq
 ```
@@ -286,7 +286,7 @@ PLAY [localhost] ***************************************************************
   ansible_ssh_user="ansible"
   ansible_ssh_pass="ansible 12345"    # <= ssh private key passphrase
   ansible_become_pass="ansible!1234"
-  ansible_private_key_file: "~/.ssh/id_sshkey_password"  # <= Add new line
+  ansible_ssh_private_key_file: "~/.ssh/id_sshkey_password"  # <= Add new line
   ~
   :wq
   ```
