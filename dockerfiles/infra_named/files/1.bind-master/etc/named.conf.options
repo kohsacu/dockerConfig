@@ -23,7 +23,16 @@ options {
 	auth-nxdomain no;    # conform to RFC1035
 	listen-on-v6 { any; };
 	masterfile-format text;
+	version "unknown";
+	recursion yes;
 
+	forwarders {
+		172.31.242.1;
+		//8.8.8.8;
+		//8.8.4.4;
+		//202.234.232.6;
+		//221.113.139.250;
+	};
 	allow-query {
 		localhost;
 		localnets;
@@ -35,13 +44,6 @@ options {
 		localnets;
 		kvm0241.local;
 		kvm0242.local;
-	};
-	recursion no;
-	forwarders {
-		8.8.8.8;
-		8.8.4.4;
-		//61.207.11.153;
-		//221.113.139.137;
 	};
 };
 
