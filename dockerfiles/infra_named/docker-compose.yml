@@ -12,6 +12,7 @@ services:
         container_name: ${CONTAINER}
         hostname: ${CONTAINER}
         image: ${REPOSITORY}:${TAG}
+        init: true
         restart: always
         #tty: true
         volumes:

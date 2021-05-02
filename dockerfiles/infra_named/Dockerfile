@@ -1,9 +1,9 @@
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 
 LABEL maintainer="Kohsacu <24363503+kohsacu@users.noreply.github.com>" \
       local.kohsacu.apps.image.source=https://github.com/kohsacu/dockerConfig.git
 
-ARG NAMED_VERSION="1:9.11.3+dfsg-1ubuntu1.13"
+ARG NAMED_VERSION="1:9.16.1-0ubuntu2.8"
 ENV NAMED_VERSION="${NAMED_VERSION}" \
     NAMED_ZONE_DIR="/var/cache/bind" \
     NAMED_USER="bind" \
@@ -20,14 +20,12 @@ RUN set -x \
     dnsutils \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-COPY ./files/entrypoint.sh /
 RUN set -x \
   && mkdir --parents --verbose --mode 775 /run/named \
-  && chown "${NAMED_USER}:${NAMED_USER}"  /run/named \
-  && chown root. /entrypoint.sh \
-  && chmod 755   /entrypoint.sh
+  && chown "${NAMED_USER}:${NAMED_USER}"  /run/named
 
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/usr/sbin/named"]
+CMD ["-c", "/etc/bind/named.conf", "-u", "bind", "-g"]
 VOLUME ["/etc/bind","/var/cache/bind"]
 #USER ${NAMED_USER}
 
