@@ -40,19 +40,24 @@ tcp   LISTEN     0       32        [fd42:b783:772f:df72::1]:53              [::]
   ```bash
   $ cp -ip ./.env{.template,}
   $ ip -4 addr show ens3
-  $ sed -i 's/%%HOST_IPADDR_V4%%/192.168.10.53/' ./.env
-  $ sed -i 's/int-ns00/int-ns01/' ./.env
   ```
 - Create docker bind mount directory
   - Master server
     ```bash
+    $ sed -i 's/%%HOST_IPADDR_V4%%/172.31.242.152/' ./.env
+    $ sed -i 's/int-ns00/int-ns01/' ./.env
     $ sudo ./volume.sh master
     $ ls -lR /var/opt/docker.volume/int-ns01/
     ```
   - Slave server
     ```bash
+    $ sed -i 's/%%HOST_IPADDR_V4%%/172.31.241.151/' ./.env
+    $ sed -i 's/int-ns00/int-ns03/' ./.env
+    $ cp -ip ./files/{1.bind-master,2.bind-slave}/etc/named.conf
+    $ cp -ip ./files/{1.bind-master,2.bind-slave}/etc/named.conf.local
+    $ cp -ip ./files/{1.bind-master,2.bind-slave}/etc/named.conf.options
     $ sudo ./volume.sh slave
-    $ ls -lR /var/opt/docker.volume/int-ns01/
+    $ ls -lR /var/opt/docker.volume/int-ns03/
     ```
 - Build & Up
   ```bash
@@ -60,8 +65,8 @@ tcp   LISTEN     0       32        [fd42:b783:772f:df72::1]:53              [::]
   $ sudo docker-compose up -d
   $ sudo docker-compose ps
     Name                Command               State                          Ports
-  ------------------------------------------------------------------------------------------------------
-  int-ns01   /usr/sbin/named -c /etc/bi ...   Up      192.168.10.53:53->53/tcp, 192.168.10.53:53->53/udp
+  --------------------------------------------------------------------------------------------------------
+  int-ns01   /usr/sbin/named -c /etc/bi ...   Up      172.31.242.152:53->53/tcp, 172.31.242.152:53->53/udp
   ```
 - Check
   ```bash
@@ -72,10 +77,10 @@ tcp   LISTEN     0       32        [fd42:b783:772f:df72::1]:53              [::]
   root          29       0  0 12:13 pts/0    00:00:00 ps -aef
   ```
   ```bash
-  $ host -t any kvm0241.local 192.168.10.53
+  $ host -t any kvm0241.local 172.31.242.152
   Using domain server:
-  Name: 192.168.10.53
-  Address: 192.168.10.53#53
+  Name: 172.31.242.152
+  Address: 172.31.242.152#53
   Aliases: 
   
   kvm0241.local has SOA record int-ns1.kvm0242.local. root.kvm0241.local. 2021012301 3600 1200 1209600 900
@@ -85,10 +90,10 @@ tcp   LISTEN     0       32        [fd42:b783:772f:df72::1]:53              [::]
   kvm0241.local mail is handled by 10 mail.kvm0241.local.
   ```
   ```bash
-  $ host -t any ipv6.l.google.com 192.168.10.53
+  $ host -t any ipv6.l.google.com 172.31.242.152
   Using domain server:
-  Name: 192.168.10.53
-  Address: 192.168.10.53#53
+  Name: 172.31.242.152
+  Address: 172.31.242.152#53
   Aliases: 
   
   ipv6.l.google.com has IPv6 address 2404:6800:4004:80b::200e
