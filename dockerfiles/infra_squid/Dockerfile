@@ -1,6 +1,6 @@
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 
-LABEL maintainer="Kohsacu <kohsacu@email.local>" \
+LABEL maintainer="Kohsacu <24363503+kohsacu@users.noreply.github.com>" \
       local.kohsacu.apps.image.source=https://github.com/kohsacu/dockerConfig.git
 
 ARG SQUID_VERSION="3.5.27"
