@@ -12,20 +12,24 @@
 - ファイルの配置
 
 ```bash
+$ cp -ip ./.env{.template,}
+$ vim .env
 $ . .env
 $ sudo mkdir -p ${PATH_DOCKER_VOLUME}/${CONTAINER}/{init.d,squid.etc,squid.spool}
-$ sudo chown -R 1000:1000 ${PATH_DOCKER_VOLUME}/${CONTAINER}
-$ cp -ip ../require/50-squid.sh ${PATH_DOCKER_VOLUME}/${CONTAINER}/init.d/
-$ cp -ip ./squid.conf ${PATH_DOCKER_VOLUME}/${CONTAINER}/squid.etc/
+$ sudo chown -R 13:13       ${PATH_DOCKER_VOLUME}/${CONTAINER}/squid.spool
+$ sudo cp -ip ./50-squid.sh ${PATH_DOCKER_VOLUME}/${CONTAINER}/init.d/
+$ sudo cp -ip ./squid.conf  ${PATH_DOCKER_VOLUME}/${CONTAINER}/squid.etc/
 ```
 
 - rsyslogd(ホスト)
 ```bash
 $ cat ../require/30-docker.conf | sudo tee -a /etc/rsyslog.d/30-docker.conf
-:syslogtag, startswith, "docker/infra/squid:" /var/log/container-squid.log
+:syslogtag, startswith, "docker/local-repo/infra/squid:" /var/log/container-squid.log
 & stop
-:syslogtag, startswith, "docker/" /var/log/docker-container.log
+:syslogtag, startswith, "docker/"                        /var/log/docker-container.log
 & stop
+```
+```bash
 $ echo '$EscapeControlCharactersOnReceive off' | sudo tee -a /etc/rsyslog.d/90-option.conf
 ```
 ```bash

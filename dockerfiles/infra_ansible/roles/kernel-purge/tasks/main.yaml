@@ -40,7 +40,7 @@
   apt:
     name:
       - linux-*-{{ PURGE_VERSION }}
-      - linux-*-{{ PURGE_VERSION }}-generic
+      - linux-*-{{ PURGE_VERSION }}-*
     state: absent
     purge: yes
     #autoremove: yes

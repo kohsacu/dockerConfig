@@ -4,4 +4,5 @@
 /secret.yaml
 /group_vars/*/secret.yaml
 !/group_vars/*/secret.yaml.template
+/roles/base-config/vars/ntp_conf.yml
 

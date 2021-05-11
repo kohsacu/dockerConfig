@@ -1,0 +1,33 @@
+version: '3.7'
+
+services:
+    apps-flaskr:
+        env_file:
+            - ./.env
+        build:
+            context: ./Dockerfiles
+            dockerfile: Dockerfile
+            args:
+                - LOGIN_USER=${LOGIN_USER}
+                - CONTAINER=${CONTAINER}
+                - FLASK_PUBLIC=${FLASK_PUBLIC}
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - .:/var/opt/apps:rw
+            - ./init.d:/opt/local/etc/init.d:rw
+            #- /var/opt/docker.volume/${CONTAINER}:/home/${LOGIN_USER}/volume:rw
+        container_name: ${CONTAINER}
+        hostname: ${CONTAINER}
+        image: ${REPOSITORY}:${TAG}
+        restart: always
+        tty: true
+        logging:
+            driver: "syslog"
+            options:
+                #syslog-address: udp://192.168.1.2:514
+                syslog-facility: "daemon"
+                tag: "{{.DaemonName}}/{{.ImageName}}/{{.Name}}"
+        ports:
+            - "${FLASK_PUBLIC}:5000"
+        network_mode: "bridge"
+

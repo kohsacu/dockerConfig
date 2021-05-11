@@ -1,0 +1,14 @@
+#!/bin/sh
+
+# 
+# == env ==
+# 
+SAVE='/sbin/iptables-save'
+OUT_FILE='/etc/iptables/rules.v4'
+
+## boot-time loader for netfilter rules
+RENAME=$(ls -l --full-time "${OUT_FILE}" | awk '{print $6"T"$7}' | sed 's/-//g' | sed 's/://g' | awk -F. '{print $1}')
+sudo cp -ip "${OUT_FILE}" "${OUT_FILE}_${RENAME}"
+sudo ${SAVE} | sudo tee "${OUT_FILE}" 1> /dev/null
+ls -l "${OUT_FILE}" "${OUT_FILE}_${RENAME}"
+

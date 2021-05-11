@@ -19,10 +19,10 @@ services:
                 - ADD_LOCALE=${ADD_LOCALE}
                 - SET_LOCALE=${SET_LOCALE}
                 - LC_ALL=${LC_ALL}
+        image: ${REPOSITORY}:${TAG}
         volumes:
             - /etc/localtime:/etc/localtime:ro
             - ./:/var/opt/ansible:rw
-        image: ${REPOSITORY}:${TAG}
         container_name: ansible-con
         hostname: ansible-srv
         tty: true

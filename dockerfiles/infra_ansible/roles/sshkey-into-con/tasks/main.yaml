@@ -1,0 +1,32 @@
+---
+- name: Create .ssh directory
+  become: no
+  file:
+    path: "{{ item.directory }}"
+    mode: '0700'
+    state: directory
+  with_items:
+    - { directory: .ssh }
+  tags:
+    - ssh-into
+    - always
+
+- name: ssh private key into container
+  become: no
+  shell:  echo -n "{{ ssh_private_key_base64_w0 }}" | base64 --decode > ${HOME}/.ssh/id_sshkey_password
+  tags:
+    - ssh-into
+    - always
+
+- name: Chenge Permissions for ssh private-key file
+  become: no
+  file:
+    path: "{{ item.file }}"
+    mode: '0600'
+    state: file
+  with_items:
+    - { file: $HOME/.ssh/id_sshkey_password }
+  tags:
+    - ssh-into
+    - always
+
