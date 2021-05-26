@@ -1,0 +1,24 @@
+---
+version: '3.7'
+services:
+    gitlab-web:
+        image: ${REPOSITORY}:${TAG}
+        container_name: ${container_name}
+        hostname: ${hostname}
+        domainname: ${domainname}
+        restart: always
+        ports:
+            - "19022:22"
+            - "80:80"
+            - "443:443"
+            - "19001:19001"
+        network_mode: bridge
+        environment:
+            GITLAB_OMNIBUS_CONFIG: "external_url 'https://${hostname}.${domainname}:443'; nginx['listen_port']=443; gitlab_rails['registry_enabled']=true; registry_external_url 'https://${hostname}.${domainname}:19001'"
+        volumes:
+            - /var/opt/docker.volume/${container_name}/config:/etc/gitlab
+            - /var/opt/docker.volume/${container_name}/logs:/var/log/gitlab
+            - /var/opt/docker.volume/${container_name}/data:/var/opt/gitlab
+            - /var/opt/docker.volume/${container_name}/registry:/var/opt/gitlab/gitlab-rails/shared/registry
+            - /var/opt/docker.volume/${container_name}/cert:/etc/gitlab/ssl
+
