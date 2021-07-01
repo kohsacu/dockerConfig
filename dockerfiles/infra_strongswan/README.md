@@ -265,7 +265,7 @@ example for docker-01(Responder).
     (..snip..)
     @@ -6,6 +6,6 @@
      # https://packages.ubuntu.com/bionic-updates/strongswan
-     #STRONGSWAN_VERSION=5.6.2-1ubuntu2.5
+     #STRONGSWAN_VERSION=5.6.2-1ubuntu2.6
      #TAG=5.6.2-1
     -CONTAINER=strongswan00
     +CONTAINER=strongswan01
@@ -283,10 +283,10 @@ example for docker-01(Responder).
     +#STRONGSWAN_VERSION=5.8.2-1ubuntu3.1
     +#TAG=5.8.2-1
      # https://packages.ubuntu.com/bionic-updates/strongswan
-    -#STRONGSWAN_VERSION=5.6.2-1ubuntu2.5
+    -#STRONGSWAN_VERSION=5.6.2-1ubuntu2.6
     -#TAG=5.6.2-1
     -CONTAINER=strongswan00
-    +STRONGSWAN_VERSION=5.6.2-1ubuntu2.5
+    +STRONGSWAN_VERSION=5.6.2-1ubuntu2.6
     +TAG=5.6.2-1
     +CONTAINER=strongswan02
      PATH_DOCKER_VOLUME=/var/opt/docker.volume
