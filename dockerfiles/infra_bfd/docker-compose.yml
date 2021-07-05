@@ -293,6 +293,10 @@ networks:
     redundant-link0:
         name: bfd-redundant0
         driver: bridge
+        driver_opts:
+            com.docker.network.bridge.enable_icc: "false"
+            com.docker.network.bridge.enable_ip_masquerade: "false"
+            com.docker.network.bridge.name: "redundant-link0"
         ipam:
             driver: default
             config:
@@ -301,6 +305,10 @@ networks:
     redundant-link1:
         name: bfd-redundant1
         driver: bridge
+        driver_opts:
+            com.docker.network.bridge.enable_icc: "false"
+            com.docker.network.bridge.enable_ip_masquerade: "false"
+            com.docker.network.bridge.name: "redundant-link1"
         ipam:
             driver: default
             config:
@@ -309,6 +317,10 @@ networks:
     external-link0:
         name: bfd-external0
         driver: bridge
+        driver_opts:
+            com.docker.network.bridge.enable_icc: "false"
+            com.docker.network.bridge.enable_ip_masquerade: "false"
+            com.docker.network.bridge.name: "external-link0"
         ipam:
             driver: default
             config:
@@ -317,6 +329,10 @@ networks:
     handover-linkA:
         name: handoverA
         driver: bridge
+        driver_opts:
+            com.docker.network.bridge.enable_icc: "false"
+            com.docker.network.bridge.enable_ip_masquerade: "false"
+            com.docker.network.bridge.name: "handover-linkA"
         ipam:
             driver: default
             config:
@@ -325,6 +341,10 @@ networks:
     handover-linkB:
         name: handoverB
         driver: bridge
+        driver_opts:
+            com.docker.network.bridge.enable_icc: "false"
+            com.docker.network.bridge.enable_ip_masquerade: "false"
+            com.docker.network.bridge.name: "handover-linkB"
         ipam:
             driver: default
             config:
@@ -333,6 +353,10 @@ networks:
     handover-linkC:
         name: handoverC
         driver: bridge
+        driver_opts:
+            com.docker.network.bridge.enable_icc: "false"
+            com.docker.network.bridge.enable_ip_masquerade: "false"
+            com.docker.network.bridge.name: "handover-linkC"
         ipam:
             driver: default
             config:
@@ -341,6 +365,10 @@ networks:
     closed-link01:
         name: vrrp-closed01
         driver: bridge
+        driver_opts:
+            com.docker.network.bridge.enable_icc: "false"
+            com.docker.network.bridge.enable_ip_masquerade: "false"
+            com.docker.network.bridge.name: "closed-link01"
         ipam:
             driver: default
             config:
@@ -349,6 +377,10 @@ networks:
     transfer-link:
         name: vrrp-transfer
         driver: bridge
+        driver_opts:
+            com.docker.network.bridge.enable_icc: "false"
+            com.docker.network.bridge.enable_ip_masquerade: "false"
+            com.docker.network.bridge.name: "transfer-link"
         ipam:
             driver: default
             config:
