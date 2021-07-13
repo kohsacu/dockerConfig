@@ -1,24 +1,59 @@
 ---
-version: '3.7'
+version: '2.4'
 services:
     gitlab-web:
         image: ${REPOSITORY}:${TAG}
         container_name: ${container_name}
         hostname: ${hostname}
         domainname: ${domainname}
+        init: true
+        mem_limit: 4g
         restart: always
         ports:
-            - "19022:22"
-            - "80:80"
-            - "443:443"
-            - "19001:19001"
-        network_mode: bridge
+            - "${publish_ssh}:22"
+            - "${publish_web}:443"
+        networks:
+            docker_dnat:
+                ipv4_address: "${dnat_ipv4_address}"
+                ipv6_address: "${dnat_ipv6_address}"
         environment:
-            GITLAB_OMNIBUS_CONFIG: "external_url 'https://${hostname}.${domainname}:443'; nginx['listen_port']=443; gitlab_rails['registry_enabled']=true; registry_external_url 'https://${hostname}.${domainname}:19001'"
+            GITLAB_OMNIBUS_CONFIG: |
+                external_url 'https://${hostname}.${domainname}'
+                nginx['listen_addresses'] = ${listen_addresses}
+                letsencrypt['enable'] = false
+                gitlab_rails['registry_enabled'] = true
+                registry_external_url 'https://${registry_hostname}.${domainname}'
+                registry_nginx['listen_addresses'] = ${listen_addresses}
+                registry_nginx['listen_port'] = ${registry_nginx_listen_port};
+                gitlab_rails['gitlab_email_enabled'] = ${gitlab_email_enabled}
+                gitlab_rails['gitlab_email_from'] = '${gitlab_email_from}'
+                gitlab_rails['gitlab_email_display_name'] = '${gitlab_email_display_name}'
+                gitlab_rails['smtp_enable'] = ${smtp_enable}
+                gitlab_rails['smtp_address'] = '${smtp_address}'
+                gitlab_rails['smtp_port'] = ${smtp_port}
+                gitlab_rails['smtp_user_name'] = '${smtp_user_name}'
+                gitlab_rails['smtp_password'] = '${smtp_password}'
+                gitlab_rails['smtp_authentication'] = '${smtp_authentication}'
+                gitlab_rails['smtp_enable_starttls_auto'] = ${smtp_enable_starttls_auto}
+                gitlab_rails['smtp_tls'] = ${smtp_tls}
         volumes:
-            - /var/opt/docker.volume/${container_name}/config:/etc/gitlab
-            - /var/opt/docker.volume/${container_name}/logs:/var/log/gitlab
-            - /var/opt/docker.volume/${container_name}/data:/var/opt/gitlab
-            - /var/opt/docker.volume/${container_name}/registry:/var/opt/gitlab/gitlab-rails/shared/registry
-            - /var/opt/docker.volume/${container_name}/cert:/etc/gitlab/ssl
+            - gitlab-ce_config:/etc/gitlab
+            - gitlab-ce_cert:/etc/gitlab/ssl
+            - gitlab-ce_data:/var/opt/gitlab
+            - gitlab-ce_logs:/var/log/gitlab
+            - gitlab-ce_registry:/var/opt/gitlab/gitlab-rails/shared/registry
+volumes:
+    gitlab-ce_config:
+        external: true
+    gitlab-ce_cert:
+        external: true
+    gitlab-ce_data:
+        external: true
+    gitlab-ce_logs:
+        external: true
+    gitlab-ce_registry:
+        external: true
+networks:
+    docker_dnat:
+        external: true
 
