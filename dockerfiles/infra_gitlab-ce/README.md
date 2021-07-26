@@ -12,8 +12,22 @@ $ sudo docker volume create --driver local ${container_name}_registry
 - example for volume on nfs
 ```bash
 $ sudo docker volume create --driver local \
-> --opt type=nfs --opt o=nolock,soft,rw,nfsvers=4,addr=<nfs_server> \
+> --opt type=nfs --opt o=nolock,soft,rw,nfsvers=3,addr=<nfs_server> \
 > --opt device=:<nfs_path> ${container_name}_config
+```
+
+## network
+```bash
+$ sudo docker network create \
+--driver=bridge \
+--subnet=172.19.44.0/24 \
+--gateway=172.19.44.1 \
+--ipv6 \
+--subnet=fdee:abcd:172:19:44::/80 \
+--gateway=fdee:abcd:172:19:44::1 \
+--opt "com.docker.network.bridge.enable_ip_masquerade"=true \
+--opt "com.docker.network.bridge.name"="docker_dnat" \
+docker_dnat
 ```
 
 ## cert files
