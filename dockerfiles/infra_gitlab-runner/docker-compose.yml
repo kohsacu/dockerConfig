@@ -1,0 +1,23 @@
+version: "3.7"
+
+services:
+    gitlab-runner-shared:
+        env_file:
+            - ./.env
+        container_name: ${SHARED_CONTAINER}
+        hostname: ${SHARED_CONTAINER}
+        image: ${RUNNER_REPOSITORY}:${RUNNER_TAG}
+        init: true
+        restart: always
+        #tty: true
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - ${PATH_DOCKER_VOLUME}/${SHARED_CONTAINER}/config:/etc/gitlab-runner
+        logging:
+            driver: "syslog"
+            options:
+                #syslog-address: udp://172.17.0.1:514
+                syslog-facility: "daemon"
+                tag: "{{.DaemonName}}/{{.ImageName}}/{{.Name}}"
+        network_mode: "bridge"
+
