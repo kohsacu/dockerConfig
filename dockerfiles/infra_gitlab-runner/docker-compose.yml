@@ -9,10 +9,48 @@ services:
         image: ${RUNNER_REPOSITORY}:${RUNNER_TAG}
         init: true
         restart: always
-        #tty: true
         volumes:
             - /etc/localtime:/etc/localtime:ro
             - ${PATH_DOCKER_VOLUME}/${SHARED_CONTAINER}/config:/etc/gitlab-runner
+        logging:
+            driver: "syslog"
+            options:
+                #syslog-address: udp://172.17.0.1:514
+                syslog-facility: "daemon"
+                tag: "{{.DaemonName}}/{{.ImageName}}/{{.Name}}"
+        network_mode: "bridge"
+
+    gitlab-runner-groups:
+        env_file:
+            - ./.env
+        container_name: ${GROUPS_CONTAINER}
+        hostname: ${GROUPS_CONTAINER}
+        image: ${RUNNER_REPOSITORY}:${RUNNER_TAG}
+        init: true
+        restart: always
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - ${PATH_DOCKER_VOLUME}/${GROUPS_CONTAINER}/config:/etc/gitlab-runner
+        logging:
+            driver: "syslog"
+            options:
+                #syslog-address: udp://172.17.0.1:514
+                syslog-facility: "daemon"
+                tag: "{{.DaemonName}}/{{.ImageName}}/{{.Name}}"
+        network_mode: "bridge"
+
+    gitlab-runner-docker:
+        env_file:
+            - ./.env
+        container_name: ${DOCKER_CONTAINER}
+        hostname: ${DOCKER_CONTAINER}
+        image: ${RUNNER_REPOSITORY}:${RUNNER_TAG}
+        init: true
+        restart: always
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - /var/run/docker.sock:/var/run/docker.sock
+            - ${PATH_DOCKER_VOLUME}/${DOCKER_CONTAINER}/config:/etc/gitlab-runner
         logging:
             driver: "syslog"
             options:

@@ -38,9 +38,23 @@
   $ CI_SERVER_URL='https://gitlab.example.com/'
   $ REGISTRATION_TOKEN='abcd1234ABCD5678-zZ0'
   $ sudo docker container exec gitlab-runner-shared gitlab-runner register \
-  --non-interactive --description "gitlab-runner-shared-shell" \
+  --non-interactive --description "shell-runner(shared) on $(hostname)" \
   --executor shell \
   --tag-list "shared,shell,$(hostname)" \
+  --url ${CI_SERVER_URL} \
+  --registration-token ${REGISTRATION_TOKEN} \
+  
+  ```
+  ```bash
+  $ CI_SERVER_URL='https://gitlab.example.com/'
+  $ REGISTRATION_TOKEN='abcd1234ABCD5678-zZ0'
+  $ sudo docker container exec gitlab-runner-docker gitlab-runner register \
+  --non-interactive --description "dind-runner(groups) on $(hostname)" \
+  --executor docker \
+  --docker-image "docker:18.09.7" \
+  --docker-privileged \
+  --docker-volumes "/cache" \
+  --tag-list "groups,dind,$(hostname)" \
   --url ${CI_SERVER_URL} \
   --registration-token ${REGISTRATION_TOKEN} \
   
@@ -50,3 +64,4 @@
   ```bash
   --tls-ca-file /etc/gitlab-runner/certs/self-CA.crt
   ```
+
