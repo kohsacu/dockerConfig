@@ -8,23 +8,27 @@ services:
         domainname: ${domainname}
         init: true
         mem_limit: 4g
-        restart: always
+        #restart: always
+        restart: on-failure:3
         ports:
             - "${publish_ssh}:22"
-            - "${publish_web}:443"
+            - "${publish_web}:80"
+            - "${publish_tls}:443"
         networks:
             docker_dnat:
                 ipv4_address: "${dnat_ipv4_address}"
                 ipv6_address: "${dnat_ipv6_address}"
+        env_file:
+            - ./.env
         environment:
             GITLAB_OMNIBUS_CONFIG: |
                 external_url 'https://${hostname}.${domainname}'
                 nginx['listen_addresses'] = ${listen_addresses}
-                letsencrypt['enable'] = false
+                letsencrypt['enable'] = ${letsencrypt_enable}
                 gitlab_rails['registry_enabled'] = true
                 registry_external_url 'https://${registry_hostname}.${domainname}'
                 registry_nginx['listen_addresses'] = ${listen_addresses}
-                registry_nginx['listen_port'] = ${registry_nginx_listen_port};
+                registry_nginx['listen_port'] = ${registry_nginx_listen_port}
                 gitlab_rails['gitlab_email_enabled'] = ${gitlab_email_enabled}
                 gitlab_rails['gitlab_email_from'] = '${gitlab_email_from}'
                 gitlab_rails['gitlab_email_display_name'] = '${gitlab_email_display_name}'
