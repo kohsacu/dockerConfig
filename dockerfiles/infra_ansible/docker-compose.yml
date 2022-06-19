@@ -15,7 +15,6 @@ services:
                 - LOGIN_USER=${LOGIN_USER}
                 - LOGIN_UID=${LOGIN_UID}
                 - LOGIN_GID=${LOGIN_GID}
-                - LOGIN_USER_PASSWORD=${LOGIN_USER_PASSWORD}
                 - ADD_LOCALE=${ADD_LOCALE}
                 - SET_LOCALE=${SET_LOCALE}
                 - LC_ALL=${LC_ALL}

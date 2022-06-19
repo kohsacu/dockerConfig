@@ -11,7 +11,10 @@
 ```bash
 $ vim ./Dockerfiles/requirements.txt
 ~
-ansible==2.9.20
+# https://pypi.org/project/ansible/
+ansible~=5.9
+# https://pypi.org/project/ansible-core/
+ansible-core~=2.12
 ~
 :wq
 ```
@@ -25,9 +28,8 @@ $ vim .env
 ~
 # Build Arguments
 REPOSITORY=cr.local/prj-id/infra/ansible
-TAG=2.9.7-1
+TAG=5.9.0-1
 LOGIN_USER=ansible
-LOGIN_USER_PASSWORD=secret_pswd # <= Recommendation Change Argument.
 LOGIN_UID=1000
 LOGIN_GID=1000
 ADD_LOCALE=en_US.UTF-8 UTF-8
@@ -39,12 +41,6 @@ HOSTNAME_ANSIBLE_SHELL_CON=ansible-shell-con # <= Shell Container Name.
 :wq
 
 $ diff -us .env{.template,}
-```
-- IF forget Changed Arguments
-```bash
-$ sudo docker image inspect cr.local/prj-id/infra/ansible:2.9.7-1 | grep LOGIN_USER_PASSWORD
-                "LOGIN_USER_PASSWORD=secret_pswd",
-                "LOGIN_USER_PASSWORD=secret_pswd",
 ```
 
 ### build ansible container image
@@ -80,8 +76,8 @@ $ cp -ip ./group_vars/west/secret.yaml{.template,}
 $ vim ./group_vars/{east,west}/secret.yaml
 ~
 ---
-ansible_ssh_user="ansible"
-ansible_ssh_pass="ansible!1234"
+ansible_user="ansible"
+ansible_pass="ansible!1234"
 ansible_become_pass="ansible!1234"
 ~
 :wq
@@ -93,12 +89,15 @@ ansible_become_pass="ansible!1234"
 
 ```bash
 $ sudo docker-compose run --rm ansible --version
-ansible 2.9.7
+ansible [core 2.12.6]
   config file = /var/opt/ansible/ansible.cfg
   configured module search path = ['/home/ansible/.ansible/plugins/modules', '/usr/share/ansible/plugins/modules']
-  ansible python module location = /var/opt/vEnv/ansible/lib/python3.6/site-packages/ansible
+  ansible python module location = /var/opt/vEnv/ansible/lib/python3.8/site-packages/ansible
+  ansible collection location = /home/ansible/.ansible/collections:/usr/share/ansible/collections
   executable location = /opt/local/bin/ansible
-  python version = 3.6.9 (default, Apr 18 2020, 01:56:04) [GCC 8.4.0]
+  python version = 3.8.10 (default, Mar 15 2022, 12:22:08) [GCC 9.4.0]
+  jinja version = 3.1.2
+  libyaml = True
 ```
 
 - Hello World
@@ -283,8 +282,8 @@ PLAY [localhost] ***************************************************************
   $ vim ./group_vars/{east,west}/secret.yaml
   ~
   ---
-  ansible_ssh_user="ansible"
-  ansible_ssh_pass="ansible 12345"    # <= ssh private key passphrase
+  ansible_user="ansible"
+  ansible_pass="ansible 12345"    # <= ssh private key passphrase
   ansible_become_pass="ansible!1234"
   ansible_ssh_private_key_file: "~/.ssh/id_sshkey_password"  # <= Add new line
   ~
@@ -313,9 +312,6 @@ $ sudo docker-compose ps
 ansible-shell-con   bash      Up
 
 $ sudo docker-compose exec ansible-shell bash
-To run a command as administrator (user "root"), use "sudo <command>".
-See "man sudo_root" for details.
-
 ansible@ansible-shell-con:/var/opt/ansible$ 
 ```
 ```bash
@@ -329,7 +325,7 @@ ansible@ansible-shell-con:/var/opt/ansible$ echo ${PATH}
 /home/ansible/bin:/opt/local/sbin:/opt/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 ansible@ansible-shell-con:/var/opt/ansible$ ls -l $(which python3)
-lrwxrwxrwx 1 root root 9 Oct 25  2018 /usr/bin/python3 -> python3.6
+lrwxrwxrwx 1 root root 9 Mar 13  2020 /usr/bin/python3 -> python3.8
 
 ansible@ansible-shell-con:/var/opt/ansible$ ls -l $(which ansible)
 lrwxrwxrwx 1 root root 33 Apr 26 18:39 /opt/local/bin/ansible -> /var/opt/vEnv/ansible/bin/ansible
@@ -343,15 +339,10 @@ exit
 ```
 ```bash
 $ LC_ALL=C ls -ldn /var/tmp/ansible-shell/ansible-shell-con
-drwxr-xr-x 2 0 0 4096 Apr 26 18:48 /var/tmp/ansible-shell/ansible-shell-con
+drwxr-xr-x 3 1000 1000 4096 Apr 26 18:48 /var/tmp/ansible-shell/ansible-shell-con
 
 $ sudo docker-compose exec ansible-shell ls -ldn /var/tmp/ansible-shell
-drwxr-xr-x 2 0 0 4096 Apr 26 18:48 /var/tmp/ansible-shell
-
-$ sudo docker-compose exec --user root ansible-shell chown 1000:1000 /var/tmp/ansible-shell
-
-$ sudo docker-compose exec ansible-shell ls -ldn /var/tmp/ansible-shell
-drwxr-xr-x 2 1000 1000 4096 Apr 26 18:48 /var/tmp/ansible-shell
+drwxr-xr-x 3 1000 1000 4096 Apr 26 18:48 /var/tmp/ansible-shell
 
 $ sudo docker-compose exec ansible-shell touch /var/tmp/ansible-shell/volume.txt
 
