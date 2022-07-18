@@ -1,0 +1,50 @@
+---
+version: "3.7"
+
+services:
+    nginx-static:
+        #env_file:
+        #    - ./.env
+        #image: nginx:stable-alpine
+        image: ${NGINX_REPOSITORY}:${NGINX_TAG}
+        container_name: ${NGINX_CONTAINER}
+        hostname: ${NGINX_CONTAINER}
+        init: true
+        restart: always
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - ${PATH_DOCKER_VOLUME}/${NGINX_CONTAINER}/html:/usr/share/nginx/html:ro
+            - ${PATH_DOCKER_VOLUME}/${NGINX_CONTAINER}/vhost:/srv/vhost:ro
+            - ${PATH_DOCKER_VOLUME}/${NGINX_CONTAINER}/conf.d:/etc/nginx/conf.d
+            - ${PATH_DOCKER_VOLUME}/${CERTBOT_CONTAINER}/letsencrypt:/etc/nginx/certs:ro
+        logging:
+            driver: "syslog"
+            options:
+                #syslog-address: udp://172.17.0.1:514
+                syslog-facility: "daemon"
+                tag: "{{.DaemonName}}/{{.ImageName}}/{{.Name}}"
+        ports:
+            - "${NGINX_HTTP_PUBLIC}:80"
+            - "${NGINX_HTTPS_PUBLIC}:443"
+        network_mode: "bridge"
+        #sysctls:
+        #    net.ipv6.conf.all.disable_ipv6: 1
+        #    net.ipv6.conf.default.disable_ipv6: 1
+        #    net.ipv6.conf.eth0.disable_ipv6: 1
+    certbot:
+        image: ${CERTBOT_REPOSITORY}:${CERTBOT_TAG}
+        container_name: ${CERTBOT_CONTAINER}
+        hostname: ${CERTBOT_CONTAINER}
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - ${PATH_DOCKER_VOLUME}/${CERTBOT_CONTAINER}/letsencrypt:/etc/letsencrypt
+            - ${PATH_DOCKER_VOLUME}/${NGINX_CONTAINER}/vhost:/srv/vhost
+        logging:
+            driver: "syslog"
+            options:
+                #syslog-address: udp://172.17.0.1:514
+                syslog-facility: "daemon"
+                tag: "{{.DaemonName}}/{{.ImageName}}/{{.Name}}"
+        network_mode: "bridge"
+        command: ["--version"]
+
