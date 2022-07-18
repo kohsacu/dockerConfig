@@ -1,0 +1,13 @@
+#!/bin/bash
+
+{
+    echo "---- start certbot-renew $(date '+%Y-%m-%d %H:%M:%S')"
+    
+    cd ${PATH_TO_DIR}/dockerConfig/dockerfiles/infra_nginx-static/ || exit 1
+    result=$(docker-compose run --rm certbot renew --post-hook='echo __certbot_renew__')
+    if echo "${result}" | grep -q "__certbot_renew__"; then
+        echo "Debug: ${result}"
+        echo "keyword exists in post-hook output."
+        docker-compose exec -T nginx-static nginx -s reload
+    fi
+} | /usr/bin/logger --priority cron.info --tag certbot-renew --id
