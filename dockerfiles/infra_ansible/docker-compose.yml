@@ -12,9 +12,6 @@ services:
             context: ./Dockerfiles
             dockerfile: Dockerfile
             args:
-                - LOGIN_USER=${LOGIN_USER}
-                - LOGIN_UID=${LOGIN_UID}
-                - LOGIN_GID=${LOGIN_GID}
                 - ADD_LOCALE=${ADD_LOCALE}
                 - SET_LOCALE=${SET_LOCALE}
                 - LC_ALL=${LC_ALL}
