@@ -28,10 +28,7 @@ $ vim .env
 ~
 # Build Arguments
 REPOSITORY=cr.local/prj-id/infra/ansible
-TAG=5.9.0-1
-LOGIN_USER=ansible
-LOGIN_UID=1000
-LOGIN_GID=1000
+TAG=5.9.0-3-amd64
 ADD_LOCALE=en_US.UTF-8 UTF-8
 SET_LOCALE=en_US.UTF-8
 LC_ALL=en_US.UTF-8
@@ -319,10 +316,10 @@ ansible@ansible-shell-con:/var/opt/ansible$ hostname
 ansible-shell-con
 
 ansible@ansible-shell-con:/var/opt/ansible$ ls -la ./inventories/hosts.ini
--rw-rw-r-- 1 ansible ansible 413 Apr 26 18:41 ./inventories/hosts.ini
+-rw-rw-r-- 1 1000 1000 413 Apr 26 18:41 ./inventories/hosts.ini
 
 ansible@ansible-shell-con:/var/opt/ansible$ echo ${PATH}
-/home/ansible/bin:/opt/local/sbin:/opt/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+/opt/local/sbin:/opt/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 ansible@ansible-shell-con:/var/opt/ansible$ ls -l $(which python3)
 lrwxrwxrwx 1 root root 9 Mar 13  2020 /usr/bin/python3 -> python3.8
