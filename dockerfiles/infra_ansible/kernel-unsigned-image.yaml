@@ -1,0 +1,21 @@
+---
+- hosts: localhost
+  connection: local
+  tasks:
+  roles:
+    - sshkey-into-con
+  gather_facts: no
+
+- name: kernel-unsigned-image
+  hosts: linux_nodes
+  roles:
+    - check-tags
+    - kernel-unsigned-image
+  vars_prompt:
+    name: UNSIGNED_IMAGE_VERSION
+    prompt: "Please enter unsigned-image version(ex: 5.4.0-123)"
+    private: no
+    confirm: no
+    default: "a.b.c-000"
+  gather_facts: no
+

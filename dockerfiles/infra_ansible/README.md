@@ -256,6 +256,46 @@ PLAY [localhost] ***************************************************************
 (..snip..)
 ```
 
+### kernel install for unsigned image
+
+- `sudo apt-get install linux-image-unsigned-${KERNEL_VERSION}-generic`
+
+```bash
+$ sudo docker-compose run --rm ansible-playbook -i ./inventories/hosts.ini ./kernel-unsigned-image.yaml --tags=check \
+> --extra-vars="UNSIGNED_IMAGE_VERSION=5.4.0-123"
+
+PLAY [localhost] ********************************************************************************************
+(..snip..)
+TASK [kernel-unsigned-image : Print "apt-cache policy"] *****************************************************
+ok: [192.168.10.123] => {
+    "_catch_apt_cache_policy_.stdout_lines": [
+        "linux-image-unsigned-5.4.0-123-generic:",
+        "  Installed: (none)",
+        "  Candidate: 5.4.0-123.139",
+        "  Version table:",
+        "     5.4.0-123.139 500",
+        "        500 http://archive.ubuntu.com/ubuntu focal-updates/main amd64 Packages",
+(..snip..)
+```
+```bash
+$ sudo docker-compose run --rm ansible-playbook -i ./inventories/hosts.ini ./kernel-unsigned-image.yaml --tags=install \
+> --extra-vars="UNSIGNED_IMAGE_VERSION=5.4.0-123"
+
+PLAY [localhost] ********************************************************************************************
+(..snip..)
+TASK [kernel-unsigned-image : Print "dpkg -l install version"] **********************************************
+ok: [192.168.10.123] => {
+    "_catch_dpkg_install_version_.stdout_lines": [
+        "linux-headers-5.4.0-123\t\t\t\tinstall",
+        "linux-headers-5.4.0-123-generic\t\t\tinstall",
+        "linux-image-unsigned-5.4.0-123-generic\t\tinstall",
+        "linux-modules-5.4.0-123-generic\t\t\tinstall",
+        "linux-modules-extra-5.4.0-123-generic\t\tinstall"
+    ]
+}
+(..snip..)
+```
+
 ### Security Append
 
 - Generate ntp_conf.yml
