@@ -1,0 +1,62 @@
+---
+- name: Catch "apt-cache policy"
+  shell: >-
+    LC_ALL=en_EN.UTF-8
+    apt-cache policy
+    linux-image-unsigned-{{ UNSIGNED_IMAGE_VERSION }}-generic
+    linux-modules-{{ UNSIGNED_IMAGE_VERSION }}-generic
+    linux-modules-extra-{{ UNSIGNED_IMAGE_VERSION }}-generic
+  register: _catch_apt_cache_policy_
+  changed_when: False
+  tags:
+    - check
+
+- name: Print "apt-cache policy"
+  debug: var=_catch_apt_cache_policy_.stdout_lines
+  tags:
+    - check
+
+- name: Catch "uname -r"
+  shell: uname -r
+  register: _catch_uname_r_
+  changed_when: False
+  tags:
+    - check
+
+- name: Print "uname -r"
+  debug: var=_catch_uname_r_.stdout_lines
+  tags:
+    - check
+
+- name: Install "unsigned kernel packages"
+  become: yes
+  apt:
+    name:
+      - linux-image-unsigned-{{ UNSIGNED_IMAGE_VERSION }}-generic
+      - linux-modules-{{ UNSIGNED_IMAGE_VERSION }}-generic
+      - linux-modules-extra-{{ UNSIGNED_IMAGE_VERSION }}-generic
+    state: present
+  register: _catch_install_kernel_packages_
+  tags:
+    - install
+
+- name: Catch "dpkg -l install version"
+  shell: dpkg --get-selections | grep linux- | grep {{ UNSIGNED_IMAGE_VERSION }}
+  register: _catch_dpkg_install_version_
+  changed_when: False
+  tags:
+    - install
+
+- name: Print "dpkg -l install version"
+  debug: var=_catch_dpkg_install_version_.stdout_lines
+  tags:
+    - install
+
+- name: shell "dpkg -l > .out"
+  shell: LC_ALL=en_EN.UTF-8 dpkg -l > ./dpkg-l_$(hostname -s)_$(date +%Y%m%dT%H%M%S).out
+  args:
+    chdir: ${HOME}/Work/logs
+  when: _catch_install_kernel_packages_ is changed
+  tags:
+    - install
+
