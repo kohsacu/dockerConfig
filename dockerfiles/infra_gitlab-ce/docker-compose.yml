@@ -40,6 +40,9 @@ services:
                 gitlab_rails['smtp_authentication'] = '${smtp_authentication}'
                 gitlab_rails['smtp_enable_starttls_auto'] = ${smtp_enable_starttls_auto}
                 gitlab_rails['smtp_tls'] = ${smtp_tls}
+                puma['worker_processes'] = ${puma_worker_processes}
+                puma['min_threads'] = ${puma_min_threads}
+                puma['max_threads'] = ${puma_max_threads}
         volumes:
             - gitlab-ce_config:/etc/gitlab
             - gitlab-ce_cert:/etc/gitlab/ssl
