@@ -23,7 +23,7 @@ $ sudo docker network create \
 --subnet=172.19.44.0/24 \
 --gateway=172.19.44.1 \
 --ipv6 \
---subnet=fdee:abcd:172:19:44::/80 \
+--subnet=fdee:abcd:172:19:44::/64 \
 --gateway=fdee:abcd:172:19:44::1 \
 --opt "com.docker.network.bridge.enable_ip_masquerade"=true \
 --opt "com.docker.network.bridge.name"="docker_dnat" \
