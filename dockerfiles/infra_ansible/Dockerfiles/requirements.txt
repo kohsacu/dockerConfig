@@ -10,12 +10,12 @@
 # $ sudo docker-compose down
 #
 # https://pypi.org/project/ansible/
-ansible~=5.9
+ansible~=6.7
 # https://pypi.org/project/ansible-core/
-ansible-core~=2.12
+ansible-core~=2.13
 #argcomplete==2.0.0
-#cffi==1.15.0
-#cryptography==37.0.2
+#cffi==1.15.1
+#cryptography==38.0.4
 #Jinja2==3.1.2
 #MarkupSafe==2.1.1
 #packaging==21.3
@@ -23,8 +23,8 @@ ansible-core~=2.12
 #pycparser==2.21
 #pyparsing==3.0.9
 #PyYAML==6.0
-#resolvelib==0.5.4
+#resolvelib==0.8.1
 #toml==0.10.2
 #xmltodict==0.13.0
 # https://pypi.org/project/yq/
-yq~=2.14
+yq==3.1.0

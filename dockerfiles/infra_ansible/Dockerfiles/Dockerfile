@@ -9,10 +9,6 @@ ARG ADD_LOCALE="en_US.UTF-8 UTF-8"
 ENV ADD_LOCALE="${ADD_LOCALE}"
 ARG SET_LOCALE="en_US.UTF-8"
 ENV SET_LOCALE="${SET_LOCALE}"
-ARG LC_ALL="en_US.UTF-8"
-ENV LC_ALL="${SET_LOCALE}"
-ARG LANG="en_US.UTF-8"
-ENV LANG="${SET_LOCALE}"
 
 ENV DEBIAN_FRONTEND="noninteractive"
 
@@ -45,6 +41,10 @@ RUN set -x \
   && pip3 install --no-cache-dir --upgrade pip \
   && pip3 install --no-cache-dir --requirement /root/requirements.txt
 
+ARG LC_ALL="en_US.UTF-8"
+ENV LC_ALL="${SET_LOCALE}"
+ARG LANG="en_US.UTF-8"
+ENV LANG="${SET_LOCALE}"
 RUN set -x \
   && : "== Add locale ==" \
   && echo "${ADD_LOCALE}" | tee -a /etc/locale.gen \
