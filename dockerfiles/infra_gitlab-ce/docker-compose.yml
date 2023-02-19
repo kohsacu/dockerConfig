@@ -50,6 +50,11 @@ services:
             - gitlab-ce_data:/var/opt/gitlab
             - gitlab-ce_logs:/var/log/gitlab
             - gitlab-ce_registry:/var/opt/gitlab/gitlab-rails/shared/registry
+        logging:
+            driver: "json-file"
+            options:
+                max-size: "100m"
+                max-file: "10"
     plantuml-server:
         image: ${PLANTUML_REPOSITORY}:${PLANTUML_TAG}
         container_name: ${PLANTUML_container_name}
@@ -64,6 +69,11 @@ services:
             - ./.env
         depends_on:
             - gitlab-web
+        logging:
+            driver: "json-file"
+            options:
+                max-size: "100m"
+                max-file: "3"
 volumes:
     gitlab-ce_config:
         external: true
