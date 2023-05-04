@@ -1,9 +1,7 @@
 #
 # $ sudo docker-compose up -d ansible-shell
 # $ sudo docker-compose exec ansible-shell bash
-# $ source /var/opt/vEnv/ansible/bin/activate
-# $ pip freeze | tee /tmp/requirements.txt
-# $ deactivate
+# $ pip3 freeze | tee /tmp/requirements.txt
 # $ exit
 # $ sudo docker cp ansible-shell-con:/tmp/requirements.txt ./Dockerfiles/
 # $ sudo chown 1000:1000 ./Dockerfiles/requirements.txt
@@ -14,17 +12,25 @@ ansible~=6.7
 # https://pypi.org/project/ansible-core/
 ansible-core~=2.13
 #argcomplete==2.0.0
+#beautifulsoup4==4.12.2
+#certifi==2022.12.7
 #cffi==1.15.1
+#charset-normalizer==3.1.0
 #cryptography==38.0.4
+#idna==3.4
 #Jinja2==3.1.2
 #MarkupSafe==2.1.1
 #packaging==21.3
-#pkg_resources==0.0.0
 #pycparser==2.21
 #pyparsing==3.0.9
 #PyYAML==6.0
+#requests==2.30.0
 #resolvelib==0.8.1
+# https://pypi.org/project/SkPy/
+SkPy~=0.10
+#soupsieve==2.4.1
 #toml==0.10.2
+#urllib3==2.0.2
 #xmltodict==0.13.0
 # https://pypi.org/project/yq/
-yq==3.1.0
+yq
