@@ -23,7 +23,7 @@ services:
             - /lib/modules:/lib/modules:ro
             - ${PATH_DOCKER_VOLUME}/${CONTAINER}/init.d:/opt/local/etc/init.d
             - ${PATH_DOCKER_VOLUME}/${CONTAINER}/ipsec.d:/etc/ipsec.d
-            - ${PATH_DOCKER_VOLUME}/${CONTAINER}/strongswan.d/charon/kernel-netlink.conf:/etc/strongswan.d/charon/kernel-netlink.conf
+            - ${PATH_DOCKER_VOLUME}/${CONTAINER}/strongswan.d/charon/charon-userdef.conf:/etc/strongswan.d/charon/charon-userdef.conf
             - ${PATH_DOCKER_VOLUME}/${CONTAINER}/strongswan.certs:/var/opt/strongswan.certs
         logging:
             driver: "syslog"

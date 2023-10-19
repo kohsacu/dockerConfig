@@ -1,0 +1,47 @@
+FROM ubuntu:22.04
+
+LABEL maintainer="Kohsacu <24363503+kohsacu@users.noreply.github.com>" \
+      local.kohsacu.apps.image.source=https://github.com/kohsacu/dockerConfig.git
+
+USER root
+
+ARG STRONGSWAN_VERSION="5.9.5-2ubuntu2.1"
+ENV STRONGSWAN_VERSION="${STRONGSWAN_VERSION}" \
+    DEBIAN_FRONTEND="noninteractive" \
+    PATH=/opt/local/sbin:/opt/local/bin:"${PATH}"
+
+# Write it in "1 line 1 package" "alphabetical order" for review.
+RUN set -x \
+  && : perl -pi -e \
+    's%^deb https?://(?!security)[^ \t]+%deb http://jp.archive.ubuntu.com/ubuntu/%g' \
+    /etc/apt/sources.list \
+  && apt-get update \
+  && apt-get upgrade --yes \
+  && apt-get install --yes --no-install-recommends \
+    apparmor-utils \
+    iptables \
+    libcharon-extauth-plugins \
+    libcharon-extra-plugins \
+    libstrongswan-extra-plugins \
+    libstrongswan-standard-plugins \
+    openssl \
+    strongswan-pki \
+    strongswan-swanctl \
+    strongswan=${STRONGSWAN_VERSION}* \
+  && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+COPY ./files/ipsec.conf    /etc/ipsec.conf
+COPY ./files/ipsec.secrets /etc/ipsec.secrets
+RUN set -x \
+  && chmod 600 /etc/ipsec.secrets
+
+COPY ./files/entrypoint.sh /opt/local/sbin/entrypoint.sh
+RUN set -x \
+  && : "== Add ENTRYPOINT script ==" \
+  && chown root. /opt/local/sbin/entrypoint.sh \
+  && chmod 755   /opt/local/sbin/entrypoint.sh
+
+#ENTRYPOINT ["/usr/sbin/ipsec"]
+#CMD ["start"]
+ENTRYPOINT ["entrypoint.sh"]
+VOLUME ["/opt/local/etc/init.d","/etc/ipsec.d","/var/opt/strongswan.certs"]
