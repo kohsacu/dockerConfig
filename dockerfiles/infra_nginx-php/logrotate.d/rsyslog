@@ -1,0 +1,3 @@
+/var/log/container-certbot.log
+/var/log/container-nginx-php.log
+/var/log/docker-container.log

@@ -1,0 +1,94 @@
+---
+version: "3.7"
+
+services:
+    nginx-php:
+        image: ${NGINX_REPOSITORY}:${NGINX_TAG}
+        container_name: ${NGINX_CONTAINER}
+        hostname: ${NGINX_CONTAINER}
+        labels:
+            - networks=bridge_nginx-php
+        init: true
+        restart: always
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - ${PATH_DOCKER_VOLUME}/${NGINX_CONTAINER}/html:/usr/share/nginx/html:rw
+            - ${PATH_DOCKER_VOLUME}/${NGINX_CONTAINER}/vhost:/srv/vhost:rw
+            - ${PATH_DOCKER_VOLUME}/${NGINX_CONTAINER}/conf.d:/etc/nginx/conf.d:ro
+            - ${PATH_DOCKER_VOLUME}/${CERTBOT_CONTAINER}/letsencrypt:/etc/nginx/certs:rw
+        logging:
+            driver: "syslog"
+            options:
+                #syslog-address: udp://172.17.0.1:514
+                syslog-facility: "daemon"
+                tag: "{{.DaemonName}}/{{.ImageName}}/{{.Name}}"
+        ports:
+            - "${NGINX_HTTP_PUBLIC}:80"
+            - "${NGINX_HTTPS_PUBLIC}:443"
+        networks:
+            - php-fpm
+        #network_mode: "bridge"
+        #sysctls:
+        #    net.ipv6.conf.all.disable_ipv6: 1
+        #    net.ipv6.conf.default.disable_ipv6: 1
+        #    net.ipv6.conf.eth0.disable_ipv6: 1
+    php-fpm:
+        image: ${PHP_FPM_REPOSITORY}:${PHP_FPM_TAG}
+        container_name: ${PHP_FPM_CONTAINER}
+        hostname: ${PHP_FPM_CONTAINER}
+        init: true
+        restart: always
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - ${PATH_DOCKER_VOLUME}/${NGINX_CONTAINER}/html:/usr/share/nginx/html:rw
+            - ${PATH_DOCKER_VOLUME}/${NGINX_CONTAINER}/vhost:/srv/vhost:rw
+            - ${PATH_DOCKER_VOLUME}/${NGINX_CONTAINER}/php-conf.d/php-mbstring.ini:/usr/local/etc/php/conf.d/php-mbstring.ini:ro
+        depends_on:
+            - nginx-php
+        logging:
+            driver: "syslog"
+            options:
+                #syslog-address: udp://172.17.0.1:514
+                syslog-facility: "daemon"
+                tag: "{{.DaemonName}}/{{.ImageName}}/{{.Name}}"
+        ports:
+            - "${PHP_FPM_PATH}:9000"
+        networks:
+            - php-fpm
+    certbot:
+        image: ${CERTBOT_REPOSITORY}:${CERTBOT_TAG}
+        container_name: ${CERTBOT_CONTAINER}
+        hostname: ${CERTBOT_CONTAINER}
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - ${PATH_DOCKER_VOLUME}/${CERTBOT_CONTAINER}/letsencrypt:/etc/letsencrypt
+            - ${PATH_DOCKER_VOLUME}/${NGINX_CONTAINER}/vhost:/srv/vhost
+        depends_on:
+            - nginx-php
+        logging:
+            driver: "syslog"
+            options:
+                #syslog-address: udp://172.17.0.1:514
+                syslog-facility: "daemon"
+                tag: "{{.DaemonName}}/{{.ImageName}}/{{.Name}}"
+        network_mode: "bridge"
+        command: ["--version"]
+    connect-bridge:
+        image: ${DIND_REPOSITORY}:${DIND_TAG}
+        container_name: connect-bridge
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+        depends_on:
+            - nginx-php
+        network_mode: "none"
+        # [WA] Joining user defined networks and default bridge network.
+        command: /bin/sh -c 'docker ps -f label=networks=bridge_nginx-php --format "{{.ID}}" | xargs docker network connect bridge'
+networks:
+    php-fpm:
+        internal: true
+        name: infra_nginx-php
+        driver: bridge
+        driver_opts:
+            com.docker.network.bridge.enable_icc: "false"
+            com.docker.network.bridge.enable_ip_masquerade: "false"
+            com.docker.network.bridge.name: "docker_php-fpm"
