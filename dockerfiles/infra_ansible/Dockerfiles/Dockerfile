@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
 LABEL maintainer="Kohsacu <24363503+kohsacu@users.noreply.github.com>" \
     local.kohsacu.base.image.source=https://github.com/kohsacu/dockerConfig.git
@@ -29,8 +29,8 @@ RUN set -x \
     python3-pip \
     python3-setuptools \
     python3-venv \
-    python3.8 \
-    python3.8-venv \
+    python3.10 \
+    python3.10-venv \
     sshpass \
     tzdata \
     unzip \

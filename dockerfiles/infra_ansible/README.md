@@ -12,9 +12,9 @@
 $ vim ./Dockerfiles/requirements.txt
 ~
 # https://pypi.org/project/ansible/
-ansible~=6.7
+ansible~=9.1
 # https://pypi.org/project/ansible-core/
-ansible-core~=2.13
+ansible-core~=2.16
 ~
 :wq
 ```
@@ -28,7 +28,7 @@ $ vim .env
 ~
 # Build Arguments
 REPOSITORY=cr.local/prj-id/infra/ansible
-TAG=6.7.0-2-amd64
+TAG=9.1.0-0-amd64
 ADD_LOCALE=en_US.UTF-8 UTF-8
 SET_LOCALE=en_US.UTF-8
 LC_ALL=en_US.UTF-8
@@ -86,13 +86,13 @@ ansible_become_pass="ansible!1234"
 
 ```bash
 $ sudo docker-compose run --rm ansible --version
-ansible [core 2.12.6]
+ansible [core 2.16.2]
   config file = /var/opt/ansible/ansible.cfg
-  configured module search path = ['/home/ansible/.ansible/plugins/modules', '/usr/share/ansible/plugins/modules']
-  ansible python module location = /var/opt/vEnv/ansible/lib/python3.8/site-packages/ansible
-  ansible collection location = /home/ansible/.ansible/collections:/usr/share/ansible/collections
-  executable location = /opt/local/bin/ansible
-  python version = 3.8.10 (default, Mar 15 2022, 12:22:08) [GCC 9.4.0]
+  configured module search path = ['/root/.ansible/plugins/modules', '/usr/share/ansible/plugins/modules']
+  ansible python module location = /usr/local/lib/python3.10/dist-packages/ansible
+  ansible collection location = /root/.ansible/collections:/usr/share/ansible/collections
+  executable location = /usr/local/bin/ansible
+  python version = 3.10.12 (main, Nov 20 2023, 15:14:05) [GCC 11.4.0] (/usr/bin/python3)
   jinja version = 3.1.2
   libyaml = True
 ```
@@ -116,11 +116,11 @@ ok: [192.168.11.123] => {
     "msg": "Hello world!"
 }
 
-TASK [HelloWorld : Catch Hostname] *****************************************************************************************************************************************************
+TASK [HelloWorld : Catch Hostname] ******************************************************
 ok: [192.168.10.123]
 ok: [192.168.11.123]
 
-TASK [HelloWorld : Print Hostname] *****************************************************************************************************************************************************
+TASK [HelloWorld : Print Hostname] ******************************************************
 ok: [192.168.10.123] => {
     "_result_hostname_.stdout": "east.ansible-node.local"
 }
@@ -349,27 +349,23 @@ $ sudo docker-compose ps
 ansible-shell-con   bash      Up
 
 $ sudo docker-compose exec ansible-shell bash
-ansible@ansible-shell-con:/var/opt/ansible$ 
+root@ansible-shell-con:/var/opt/ansible# 
 ```
 ```bash
-ansible@ansible-shell-con:/var/opt/ansible$ hostname
+root@ansible-shell-con:/var/opt/ansible# hostname
 ansible-shell-con
 
-ansible@ansible-shell-con:/var/opt/ansible$ ls -la ./inventories/hosts.ini
+root@ansible-shell-con:/var/opt/ansible# ls -la ./inventories/hosts.ini
 -rw-rw-r-- 1 1000 1000 413 Apr 26 18:41 ./inventories/hosts.ini
 
-ansible@ansible-shell-con:/var/opt/ansible$ echo ${PATH}
-/opt/local/sbin:/opt/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+root@ansible-shell-con:/var/opt/ansible# echo ${PATH}
+/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
-ansible@ansible-shell-con:/var/opt/ansible$ ls -l $(which python3)
-lrwxrwxrwx 1 root root 9 Mar 13  2020 /usr/bin/python3 -> python3.8
+root@ansible-shell-con:/var/opt/ansible# ls -l $(which python3)
+lrwxrwxrwx 1 root root 10 Aug 18  2022 /usr/bin/python3 -> python3.10
 
-ansible@ansible-shell-con:/var/opt/ansible$ ls -l $(which ansible)
-lrwxrwxrwx 1 root root 33 Apr 26 18:39 /opt/local/bin/ansible -> /var/opt/vEnv/ansible/bin/ansible
-
-ansible@ansible-shell-con:/var/opt/ansible$ ls -l ${PYTHON_VENV_DIR}/ansible/bin/python{,3}
-lrwxrwxrwx 1 root root  7 Apr 26 21:49 /var/opt/vEnv/ansible/bin/python -> python3
-lrwxrwxrwx 1 root root 16 Apr 26 21:49 /var/opt/vEnv/ansible/bin/python3 -> /usr/bin/python3
+root@ansible-shell-con:/var/opt/ansible# ls -l $(which ansible)
+-rwxr-xr-x 1 root root 216 Dec 18 00:26 /usr/local/bin/ansible
 
 ansible@ansible-srv:/var/opt/ansible$ exit
 exit
