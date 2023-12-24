@@ -43,7 +43,7 @@ $ diff -us .env{.template,}
 ### build ansible container image
 
 ```bash
-$ sudo docker-compose build --no-cache
+$ sudo docker compose build --no-cache
 ```
 
 ## Environment dependent editing files
@@ -85,7 +85,7 @@ ansible_become_pass="ansible!1234"
 - version
 
 ```bash
-$ sudo docker-compose run --rm ansible --version
+$ sudo docker compose run --rm ansible --version
 ansible [core 2.16.2]
   config file = /var/opt/ansible/ansible.cfg
   configured module search path = ['/root/.ansible/plugins/modules', '/usr/share/ansible/plugins/modules']
@@ -100,7 +100,7 @@ ansible [core 2.16.2]
 - Hello World
 
 ```bash
-$ sudo docker-compose run --rm ansible-playbook -i ./inventories/hosts.ini ./HelloWorld.yaml
+$ sudo docker compose run --rm ansible-playbook -i ./inventories/hosts.ini ./HelloWorld.yaml
 
 PLAY [Test HelloWorld] ******************************************************************
 
@@ -138,10 +138,10 @@ PLAY RECAP *********************************************************************
 
 ### package upgrade
 
-- `$ apt-get update`
+- `$ apt-get update` and `apt-get upgrade -s`
 
 ```bash
-$ sudo docker-compose run --rm ansible-playbook -i ./inventories/hosts.ini ./apt-get.yaml --tags=check
+$ sudo docker compose run --rm ansible-playbook -i ./inventories/hosts.ini ./apt-get.yaml --tags=check
 
 PLAY [localhost] ************************************************************************
 
@@ -183,7 +183,7 @@ localhost                  : ok=1    changed=0    unreachable=0    failed=0    s
 - `$ apt-get upgrade`
 
 ```bash
-$ sudo docker-compose run --rm ansible-playbook -i ./inventories/hosts.ini ./apt-get.yaml --tags=upgrade
+$ sudo docker compose run --rm ansible-playbook -i ./inventories/hosts.ini ./apt-get.yaml --tags=upgrade
 
 PLAY [localhost] *********************************************************
 
@@ -225,7 +225,7 @@ localhost                  : ok=1    changed=0    unreachable=0    failed=0    s
 - `$ dpkg --get-selections | grep linux-`
 
 ```bash
-$ sudo docker-compose run --rm ansible-playbook -i ./inventories/hosts.ini ./kernel-purge.yaml --tags=check
+$ sudo docker compose run --rm ansible-playbook -i ./inventories/hosts.ini ./kernel-purge.yaml --tags=check
 
 PLAY [localhost] ********************************************************************************************
 
@@ -238,7 +238,7 @@ Please enter Purge version(ex: 4.4.0-123) [a.b.c-000]: [Return]
 - `$ apt-get remove --purge linux-*-{{ PURGE_VERSION }} linux-*-{{ PURGE_VERSION }}-generic`
 
 ```bash
-$ sudo docker-compose run --rm ansible-playbook -i ./inventories/hosts.ini ./kernel-purge.yaml --tags=purge
+$ sudo docker compose run --rm ansible-playbook -i ./inventories/hosts.ini ./kernel-purge.yaml --tags=purge
 
 PLAY [localhost] ********************************************************************************************
 
@@ -249,7 +249,7 @@ Please enter Purge version(ex: 4.4.0-123) [a.b.c-000]: <purge_version>
 ```
 or
 ```bash
-$ sudo docker-compose run --rm ansible-playbook -i ./inventories/hosts.ini ./kernel-purge.yaml --tags=purge \
+$ sudo docker compose run --rm ansible-playbook -i ./inventories/hosts.ini ./kernel-purge.yaml --tags=purge \
 > --extra-vars="PURGE_VERSION=4.4.0-123"
 
 PLAY [localhost] ********************************************************************************************
@@ -261,7 +261,7 @@ PLAY [localhost] ***************************************************************
 - `sudo apt-get install linux-image-unsigned-${KERNEL_VERSION}-generic`
 
 ```bash
-$ sudo docker-compose run --rm ansible-playbook -i ./inventories/hosts.ini ./kernel-unsigned-image.yaml --tags=check \
+$ sudo docker compose run --rm ansible-playbook -i ./inventories/hosts.ini ./kernel-unsigned-image.yaml --tags=check \
 > --extra-vars="UNSIGNED_IMAGE_VERSION=5.4.0-123"
 
 PLAY [localhost] ********************************************************************************************
@@ -278,7 +278,7 @@ ok: [192.168.10.123] => {
 (..snip..)
 ```
 ```bash
-$ sudo docker-compose run --rm ansible-playbook -i ./inventories/hosts.ini ./kernel-unsigned-image.yaml --tags=install \
+$ sudo docker compose run --rm ansible-playbook -i ./inventories/hosts.ini ./kernel-unsigned-image.yaml --tags=install \
 > --extra-vars="UNSIGNED_IMAGE_VERSION=5.4.0-123"
 
 PLAY [localhost] ********************************************************************************************
@@ -309,7 +309,7 @@ ok: [192.168.10.123] => {
   ```
 - run playbook
   ```bash
-  $ sudo docker-compose run --rm ansible-playbook -i ./inventories/hosts.ini ./base-config.yaml --tags=security_append
+  $ sudo docker compose run --rm ansible-playbook -i ./inventories/hosts.ini ./base-config.yaml --tags=security_append
   ```
 
 ### SSH public key authentication (enable passphrase)
@@ -328,28 +328,28 @@ ok: [192.168.10.123] => {
   ```
 - run playbook
   ```bash
-  $ sudo docker-compose run --rm ansible-playbook -i ./inventories/hosts.ini ./HelloWorld.yaml \
+  $ sudo docker compose run --rm ansible-playbook -i ./inventories/hosts.ini ./HelloWorld.yaml \
   > --extra-vars ssh_private_key_base64_w0="$(base64 --wrap=0 ~/.ssh/id_ed25519)"
   ```
 
 ## OneShot
 
 ```bash
-$ sudo docker-compose run --rm ansible -i ./inventories/hosts.ini linux_nodes -m shell -a "LC_ALL=C ls -al /root" --become
+$ sudo docker compose run --rm ansible -i ./inventories/hosts.ini linux_nodes -m shell -a "LC_ALL=C ls -al /root" --become
 ```
 
 ## Shell Container
 
 ```bash
-$ sudo docker-compose up -d ansible-shell
+$ sudo docker compose up -d ansible-shell
 
-$ sudo docker-compose ps
+$ sudo docker compose ps
       Name          Command   State   Ports
 -------------------------------------------
 ansible-shell-con   bash      Up
 
-$ sudo docker-compose exec ansible-shell bash
-root@ansible-shell-con:/var/opt/ansible# 
+$ sudo docker compose exec ansible-shell bash
+root@ansible-shell-con:/var/opt/ansible#
 ```
 ```bash
 root@ansible-shell-con:/var/opt/ansible# hostname
@@ -374,25 +374,25 @@ exit
 $ LC_ALL=C ls -ldn /var/tmp/ansible-shell/ansible-shell-con
 drwxr-xr-x 3 1000 1000 4096 Apr 26 18:48 /var/tmp/ansible-shell/ansible-shell-con
 
-$ sudo docker-compose exec ansible-shell ls -ldn /var/tmp/ansible-shell
+$ sudo docker compose exec ansible-shell ls -ldn /var/tmp/ansible-shell
 drwxr-xr-x 3 1000 1000 4096 Apr 26 18:48 /var/tmp/ansible-shell
 
-$ sudo docker-compose exec ansible-shell touch /var/tmp/ansible-shell/volume.txt
+$ sudo docker compose exec ansible-shell touch /var/tmp/ansible-shell/volume.txt
 
 $ LC_ALL=C ls -ln /var/tmp/ansible-shell/ansible-shell-con/volume.txt 
 -rw-r--r-- 1 1000 1000 0 Apr 26 18:49 /var/tmp/ansible-shell/ansible-shell-con/volume.txt
 ```
 ```bash
-$ sudo docker-compose ps
+$ sudo docker compose ps
       Name          Command   State   Ports
 -------------------------------------------
 ansible-shell-con   bash      Up
 
-$ sudo docker-compose down
+$ sudo docker compose down
 Stopping ansible-shell-con ... done
 Removing ansible-shell-con ... done
 
-$ sudo docker-compose ps
+$ sudo docker compose ps
 Name   Command   State   Ports
 ------------------------------
 ```

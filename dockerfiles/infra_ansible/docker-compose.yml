@@ -40,7 +40,6 @@ services:
         volumes:
             - /etc/localtime:/etc/localtime:ro
             - ./:/var/opt/ansible:rw
-        image: ${REPOSITORY}:${TAG}
         container_name: ansible-playbook-con
         hostname: ansible-srv
         tty: true
@@ -63,7 +62,6 @@ services:
             - /etc/localtime:/etc/localtime:ro
             - ./:/var/opt/ansible:rw
             - /var/tmp/ansible-shell/${HOSTNAME_ANSIBLE_SHELL_CON}:/var/tmp/ansible-shell:rw
-        image: ${REPOSITORY}:${TAG}
         container_name: ${HOSTNAME_ANSIBLE_SHELL_CON}
         hostname: ${HOSTNAME_ANSIBLE_SHELL_CON}
         tty: true
