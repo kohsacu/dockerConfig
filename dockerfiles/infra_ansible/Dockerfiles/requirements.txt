@@ -8,29 +8,28 @@
 # $ sudo docker-compose down
 #
 # https://pypi.org/project/ansible/
-ansible~=6.7
+ansible~=9.1
 # https://pypi.org/project/ansible-core/
-ansible-core~=2.13
-#argcomplete==2.0.0
+ansible-core~=2.16
+#argcomplete==3.2.1
 #beautifulsoup4==4.12.2
-#certifi==2022.12.7
-#cffi==1.15.1
-#charset-normalizer==3.1.0
-#cryptography==38.0.4
-#idna==3.4
+#certifi==2023.11.17
+#cffi==1.16.0
+#charset-normalizer==3.3.2
+#cryptography==41.0.7
+#idna==3.6
 #Jinja2==3.1.2
-#MarkupSafe==2.1.1
-#packaging==21.3
+#MarkupSafe==2.1.3
+#packaging==23.2
 #pycparser==2.21
-#pyparsing==3.0.9
-#PyYAML==6.0
-#requests==2.30.0
-#resolvelib==0.8.1
+#PyYAML==6.0.1
+#requests==2.31.0
+#resolvelib==1.0.1
 # https://pypi.org/project/SkPy/
 SkPy~=0.10
-#soupsieve==2.4.1
-#toml==0.10.2
-#urllib3==2.0.2
+#soupsieve==2.5
+#tomlkit==0.12.3
+#urllib3==2.1.0
 #xmltodict==0.13.0
 # https://pypi.org/project/yq/
 yq
