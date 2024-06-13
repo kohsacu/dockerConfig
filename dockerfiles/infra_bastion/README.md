@@ -20,14 +20,15 @@
 ### 構成図
 
 ```
-                                                      +---------------+
- ~~~~~~~~~~~~~~               +-----+                 |  Docker host  |
+                              +-----+
+                              |     |                 +---------------+
+ ~~~~~~~~~~~~~~               |     |                 |  Docker host  |
 (              )              |     |                 |  +---------+  |
-( The Internet )--(Hi Port)-->+ CPE +--(publish)--+-->+  | Bastion |  |
-(              )              |     |             |   |  +---------+  |
- ~~~~~~~~~~~~~~               +-----+             |   |               |
-                                                  |   +---------------+
-                                                  |
+( The Internet )--(Hi Port)-->+ CPE +--(publish)----->+  | Bastion |  |
+(              )              |     |                 |  +---------+  |
+ ~~~~~~~~~~~~~~               |     +-------------+   |               |
+                              |     |             |   +---------------+
+                              +-----+             |
                                                   |   +------------+
                                                   +---| Other host |--+
                                                       +------------+  |--+
@@ -40,7 +41,6 @@
 - 前提
   - CPE は任意の Hi Port を Docker host の publish port へ Port Mapping する事が出来る
   - Docker host と Other host は IP リーチャビリティがある
-  - Docker host の CPE 側 IF は Linux Bridge にて接続されている(`docker0`)
 
 ## build
 
@@ -52,46 +52,31 @@
 $ cd ./dockerfiles/infra_bastion
 $ cp -ip .env{.template,}
 $ vim .env
-~
-REPOSITORY=infra/bastion
-TAG=3.10.2-1
-CONTAINER=bastion01
-LOGIN_UID=1000
-LOGIN_GID=1000
-LOGIN_USER=alpine
-LOGIN_USER_PASSWORD=alpine!1234
-PUBLIC_SSH=65422
-~
-:wq
 ```
 
-#### volumes(host)
+#### network
 
 ```bash
-$ source ./.env
-$ sudo mkdir -p ${HOME}/docker.volume/${CONTAINER}/init.d
-$ sudo chown -R ${LOGIN_UID}:${LOGIN_GID} ${HOME}/docker.volume/${CONTAINER}
-```
-
-#### 起動スクリプト
-
-```bash
-$ cp -ip ../common/10-static-routes.sh ${HOME}/docker.volume/${CONTAINER}/init.d
-$ sed -i 's/eth1$/eth0/' ~/docker.volume/${CONTAINER}/init.d/10-static-routes.sh
-$ sed -i 's/NEXT-HOP/192.168.1.1/' ~/docker.volume/${CONTAINER}/init.d/10-static-routes.sh
-```
-```bash
-$ cp -ip ../require/20-sshd.sh ${HOME}/docker.volume/${CONTAINER}/init.d
+$ sudo docker network create \
+--driver=bridge \
+--subnet=172.19.44.0/24 \
+--gateway=172.19.44.1 \
+--ipv6 \
+--subnet=fdee:abcd:172:19:44::/64 \
+--gateway=fdee:abcd:172:19:44::1 \
+--opt "com.docker.network.bridge.enable_ip_masquerade"=true \
+--opt "com.docker.network.bridge.name"="docker_dnat" \
+docker_dnat
 ```
 ```bash
-$ cp -ip ../common/init.sh .
-$ sed -i 's/bash/sh/' ./init.sh
-$ chmod +x ./init.sh
+$ sudo ip6tables --table nat --append PREROUTING --proto tcp --dport ${PUBLIC_SSH} --jump DNAT \
+--to [${DNAT_SSH_IPV6}]:22 \
+--match comment --comment "${CONTAINER}"
 ```
 
 #### syslogd
 
-- Example
+Example:
 ```bash
 $ cat /etc/rsyslog.d/30-docker.conf 
 :syslogtag, startswith, "docker/infra/bastion:" /var/log/container-bastion.log
@@ -103,65 +88,65 @@ $ cat /etc/rsyslog.d/30-docker.conf
 ### build
 
 ```bash
-$ sudo docker-compose build
+$ sudo docker compose build
 ```
+コンテナに `authorized_keys` を bind mount する都合上 sudo を使用する場合は `-E(--preserve-env)` オプションを付与して下さい。
 ```bash
-$ sudo docker-compose up -d
+$ sudo --preserve-env docker compose up --detach
 $ grep ${CONTAINER} /var/log/container-bastion.log | tail
-
-Starting container init scripts on bastion01...
-/opt/local/sbin/init.sh: running /home/alpine/volume/init.d/10-static-routes.sh
-
-/opt/local/sbin/init.sh: running /home/alpine/volume/init.d/20-sshd.sh
-/lib/rc/sh/openrc-run.sh: line 100: can't create /sys/fs/cgroup/blkio/tasks: Read-only file system
-(..snip..)
-/lib/rc/sh/openrc-run.sh: line 100: can't create /sys/fs/cgroup/systemd/tasks: Read-only file system
-ssh-keygen: generating new host keys: RSA DSA ECDSA ED25519
- * Starting sshd ... [ ok ]
+(...snip...)
+Jun 15 02:50:31 docker-host docker/infra/bastion:3.20.0-1/bastion01[114696]: == Starting sshd service. ==#015
+Jun 15 02:50:31 docker-host docker/infra/bastion:3.20.0-1/bastion01[114696]: + /usr/sbin/sshd -D -e#015
+Jun 15 02:50:31 docker-host docker/infra/bastion:3.20.0-1/bastion01[114696]: Server listening on 0.0.0.0 port 22.#015#015
+Jun 15 02:50:31 docker-host docker/infra/bastion:3.20.0-1/bastion01[114696]: Server listening on :: port 22.#015#015
 ```
 
 ### Connect
 
 - docker exec
-```bash
-$ sudo docker container exec -it --user=${LOGIN_UID}:${LOGIN_GID} ${CONTAINER} ash
-```
-- ssh-keygen @ docker host
-```bash
-$ SSH_KEY="${HOME}/.ssh/id_ed25519_${LOGIN_USER}.pem"
-$ ssh-keygen -m PEM -t ed25519 -C "${LOGIN_USER}@docker-container.local" -P "${LOGIN_USER_PASSWORD}" -f "${SSH_KEY}"
-```
-- 公開鍵の登録
-```bash
-$ sudo docker cp ${SSH_KEY}.pub ${CONTAINER}:/home/${LOGIN_USER}/.ssh/authorized_keys
-$ sudo docker container exec -it --user=1000:1000 ${CONTAINER} ash -c 'ls -ln .ssh/authorized_keys'
--rw-r--r--    1 1000     1000           105 Jul 14 13:35 .ssh/authorized_keys
-$ ssh -l alpine -i ${SSH_KEY} 172.17.0.2
-Are you sure you want to continue connecting (yes/no)? yes
-Enter passphrase for key '${HOME}/.ssh/id_ed25519.${CONTAINER}_${LOGIN_USER}.pem':
-```
+  ```bash
+  $ sudo docker container exec -it --user=${LOGIN_UID}:${LOGIN_GID} ${CONTAINER} ash
+  $ exit
+  ```
+- ssh
+  ```bash
+  $ sudo docker container inspect bastion11 | jq '.[].Mounts[] | select( .Source == "/home/<Docker host User>/.ssh/authorized_keys" )'
+  {
+    "Type": "bind",
+    "Source": "/home/<Docker host User>/.ssh/authorized_keys",
+    "Destination": "/home/{{ login_user }}/.ssh/authorized_keys",
+    "Mode": "ro",
+    "RW": false,
+    "Propagation": "rprivate"
+  }
+  $ sudo docker container exec -it bastion11 sha256sum .ssh/authorized_keys; sha256sum ~/.ssh/authorized_keys
+  a76c4c20ba294c08949e95ca990a89fa0a49c5a499a9749b1c3a1ef9c6797c2d  .ssh/authorized_keys
+  a76c4c20ba294c08949e95ca990a89fa0a49c5a499a9749b1c3a1ef9c6797c2d  /home/<Docker host User>/.ssh/authorized_keys
+  ```
+  ```bash
+  $ ssh -i ~/.ssh/{{ ssh_private_key }} -l {{ login_user }} -p {{ public_port }} {{ docker_host_ip_address }}
+  ```
 - login log
-```bash
-(..snip..)
-Jul 14 18:31:55 docker-host docker/infra/bastion:0.1/bastion01[5427]: Connection from 192.168.1.100 port 48064 on 192.168.1.5 port 22
-Jul 14 18:31:55 docker-host docker/infra/bastion:0.1/bastion01[5427]: Accepted key ED25519 SHA256:4CEBs4Z0x/iIOUA3wsvrQ8vpvSXtugCUBQl4XbvPdoQ found at /home/alpine/.ssh/authorized_keys:1
-Jul 14 18:31:55 docker-host docker/infra/bastion:0.1/bastion01[5427]: Postponed publickey for alpine from 192.168.1.100 port 48064 ssh2 [preauth]
-Jul 14 18:31:59 docker-host docker/infra/bastion:0.1/bastion01[5427]: Accepted key ED25519 SHA256:4CEBs4Z0x/iIOUA3wsvrQ8vpvSXtugCUBQl4XbvPdoQ found at /home/alpine/.ssh/authorized_keys:1
-Jul 14 18:31:59 docker-host docker/infra/bastion:0.1/bastion01[5427]: Accepted publickey for alpine from 192.168.1.100 port 48064 ssh2: ED25519 SHA256:4CEBs4Z0x/iIOUA3wsvrQ8vpvSXtugCUBQQ
-Jul 14 18:31:59 docker-host docker/infra/bastion:0.1/bastion01[5427]: User child is on pid 17
-Jul 14 18:31:59 docker-host docker/infra/bastion:0.1/bastion01[5427]: Starting session: shell on pts/1 for alpine from 192.168.1.100 port 48064 id 0
-Jul 14 18:32:05 docker-host docker/infra/bastion:0.1/bastion01[5427]: Close session: user alpine from 192.168.1.100 port 48064 id 0
-Jul 14 18:32:05 docker-host docker/infra/bastion:0.1/bastion01[5427]: Received disconnect from 192.168.1.100 port 48064:11: disconnected by user
-Jul 14 18:32:05 docker-host docker/infra/bastion:0.1/bastion04[5427]: Disconnected from user alpine 192.168.1.100 port 48064
-(..snip..)
-```
+  ```bash
+  (..snip..)
+  Jul 14 18:31:55 docker-host docker/infra/bastion:3.20.0-1/bastion01[114696]: Connection from 192.168.1.100 port 48064 on 172.19.44.22 port 22
+  Jul 14 18:31:55 docker-host docker/infra/bastion:3.20.0-1/bastion01[114696]: Accepted key ED25519 SHA256:4CEBs4Z0x/iIOUA3wsvrQ8vpvSXtugCUBQl4XbvPdoQ found at /home/alpine/.ssh/authorized_keys:1
+  Jul 14 18:31:55 docker-host docker/infra/bastion:3.20.0-1/bastion01[114696]: Postponed publickey for alpine from 192.168.1.100 port 48064 ssh2 [preauth]
+  Jul 14 18:31:59 docker-host docker/infra/bastion:3.20.0-1/bastion01[114696]: Accepted key ED25519 SHA256:4CEBs4Z0x/iIOUA3wsvrQ8vpvSXtugCUBQl4XbvPdoQ found at /home/alpine/.ssh/authorized_keys:1
+  Jul 14 18:31:59 docker-host docker/infra/bastion:3.20.0-1/bastion01[114696]: Accepted publickey for alpine from 192.168.1.100 port 48064 ssh2: ED25519 SHA256:4CEBs4Z0x/iIOUA3wsvrQ8vpvSXtugCUBQQ
+  Jul 14 18:31:59 docker-host docker/infra/bastion:3.20.0-1/bastion01[114696]: User child is on pid 17
+  Jul 14 18:31:59 docker-host docker/infra/bastion:3.20.0-1/bastion01[114696]: Starting session: shell on pts/1 for alpine from 192.168.1.100 port 48064 id 0
+  Jul 14 18:32:05 docker-host docker/infra/bastion:3.20.0-1/bastion01[114696]: Close session: user alpine from 192.168.1.100 port 48064 id 0
+  Jul 14 18:32:05 docker-host docker/infra/bastion:3.20.0-1/bastion01[114696]: Received disconnect from 192.168.1.100 port 48064:11: disconnected by user
+  Jul 14 18:32:05 docker-host docker/infra/bastion:3.20.0-1/bastion01[114696]: Disconnected from user alpine 192.168.1.100 port 48064
+  (..snip..)
+  ```
 
 ### Check
 
 ```bash
 bastion01:~$ ps aux | grep sshd
-bastion01:~$ sudo ls -la /root
 bastion01:~$ exit
-container-host:~$ ssh -l bastion 172.17.0.2
-Permission denied (publickey,keyboard-interactive).
+Docker-host:~$ ssh -l {{ login_user }} -p {{ public_port }} {{ docker_host_ip_address }}
+{{ login_user }}@{{ docker_host_ip_address }}: Permission denied (publickey,keyboard-interactive).
 ```

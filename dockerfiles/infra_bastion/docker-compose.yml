@@ -16,10 +16,11 @@ services:
         volumes:
             - /etc/localtime:/etc/localtime:ro
             - /etc/ssh/ssh_host_ed25519_key:/etc/ssh/ssh_host_ed25519_key:ro
-            - /var/opt/docker.volume/${CONTAINER}:/home/${LOGIN_USER}/volume
+            - ${HOME}/.ssh/authorized_keys:/home/${LOGIN_USER}/.ssh/authorized_keys:ro
         container_name: ${CONTAINER}
         hostname: ${CONTAINER}
         image: ${REPOSITORY}:${TAG}
+        init: true
         restart: always
         tty: true
         logging:
@@ -30,5 +31,10 @@ services:
                 tag: "{{.DaemonName}}/{{.ImageName}}/{{.Name}}"
         ports:
             - "${PUBLIC_SSH}:22"
-        network_mode: "bridge"
-
+        networks:
+            docker_dnat:
+                ipv4_address: "${DNAT_SSH_IPV4}"
+                ipv6_address: "${DNAT_SSH_IPV6}"
+networks:
+    docker_dnat:
+        external: true
