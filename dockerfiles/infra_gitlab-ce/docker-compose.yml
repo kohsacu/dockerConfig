@@ -7,7 +7,7 @@ services:
         hostname: ${hostname}
         domainname: ${domainname}
         init: true
-        mem_limit: 4g
+        mem_limit: 8g
         #restart: always
         restart: on-failure:3
         ports:
@@ -21,10 +21,12 @@ services:
         env_file:
             - ./.env
         environment:
+                #letsencrypt['alt_names'] = ['${letsencrypt_alt_names}']
             GITLAB_OMNIBUS_CONFIG: |
                 external_url 'https://${hostname}.${domainname}'
                 nginx['listen_addresses'] = ${listen_addresses}
                 letsencrypt['enable'] = ${letsencrypt_enable}
+                letsencrypt['contact_emails'] = ['${letsencrypt_contact_emails}']
                 gitlab_rails['registry_enabled'] = true
                 registry_external_url 'https://${registry_hostname}.${domainname}'
                 registry_nginx['listen_addresses'] = ${listen_addresses}
@@ -60,7 +62,7 @@ services:
         container_name: ${PLANTUML_container_name}
         restart: always
         ports:
-            - "${PLANTUML_PORT}:8080"
+            - "${publish_plantuml}:8080"
         networks:
             docker_dnat:
                 ipv4_address: "${PLANTUML_IPV4_ADDRESS}"
