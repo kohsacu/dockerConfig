@@ -15,7 +15,10 @@ services:
                 - CONTAINER=${CONTAINER}
         volumes:
             - /etc/localtime:/etc/localtime:ro
+            - /etc/ssh/ssh_host_ecdsa_key:/etc/ssh/ssh_host_ecdsa_key:ro
+            - /etc/ssh/ssh_host_ecdsa_key.pub:/etc/ssh/ssh_host_ecdsa_key.pub:ro
             - /etc/ssh/ssh_host_ed25519_key:/etc/ssh/ssh_host_ed25519_key:ro
+            - /etc/ssh/ssh_host_ed25519_key.pub:/etc/ssh/ssh_host_ed25519_key.pub:ro
             - ${HOME}/.ssh/authorized_keys:/home/${LOGIN_USER}/.ssh/authorized_keys:ro
         container_name: ${CONTAINER}
         hostname: ${CONTAINER}
