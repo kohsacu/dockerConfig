@@ -1,4 +1,4 @@
-FROM alpine:3.20.0
+FROM alpine:3.20.1
 
 LABEL maintainer="Kohsacu <kohsacu@email.local>" \
       local.kohsacu.base.image.source=https://github.com/kohsacu/dockerConfig.git
@@ -17,16 +17,10 @@ ENV LOGIN_HOME /home/"${LOGIN_USER}"
 
 # Write it in "1 line 1 package" "alphabetical order" for review.
 RUN set -x \
-  && : "== [debug] packages information; from here ==" \
-  && apk --no-cache info \
-  && : "== [debug] packages information; up to here ==" \
   && apk --no-cache add \
     openrc \
     openssh \
     shadow \
-  && : "== [debug] packages information; from here ==" \
-  && apk --no-cache info \
-  && : "== [debug] packages information; up to here ==" \
   && rm -f /var/cache/apk/APKINDEX.*.tar.gz \
   && : "== Create Operation User ($ docker run --user=${LOGIN_UID}:${LOGIN_GID}) ==" \
   && groupadd --gid "${LOGIN_GID}" "${LOGIN_USER}" \
@@ -34,22 +28,12 @@ RUN set -x \
     --shell /bin/ash --uid "${LOGIN_UID}" --gid "${LOGIN_GID}" \
     "${LOGIN_USER}" \
   && : "== edit sshd config ==" \
+  && mkdir -p /etc/ssh/sshd_config.d \
   && mkdir -p "${LOGIN_HOME}/.ssh" \
   && chmod 700 "${LOGIN_HOME}/.ssh" \
   && chown "${LOGIN_UID}:${LOGIN_GID}" "${LOGIN_HOME}/.ssh" \
-  && cp -p /etc/ssh/sshd_config /etc/ssh/sshd_config.debug \
-  && sed -i 's/\(#LogLevel INFO\)/\1\nLogLevel VERBOSE/' /etc/ssh/sshd_config \
-  && sed -i 's/^#\(.*HostKey \/etc\/ssh\/ssh_host_ed25519_key\)/\1/' /etc/ssh/sshd_config \
-  && sed -i 's/^#\(.*PubkeyAuthentication yes\)/\1/' /etc/ssh/sshd_config \
-  && sed -i 's/\(^#PasswordAuthentication yes\)/\1\nPasswordAuthentication no/' /etc/ssh/sshd_config \
-  && sed -i 's/^#\(.*PermitEmptyPasswords no\)/\1/' /etc/ssh/sshd_config \
-  && sed -i 's/\(^#ChallengeResponseAuthentication yes\)/\1\nChallengeResponseAuthentication no/' /etc/ssh/sshd_config \
-  && sed -i '/^AllowTcpForwarding /s/no/yes/' /etc/ssh/sshd_config \
-  && { \
-    echo -e "\n# == Add sshd Recommended setting =="; \
-    echo "Protocol 2"; \
-    echo "PermitRootLogin no"; \
-  } | tee -a /etc/ssh/sshd_config
+  && grep "^Include /etc/ssh/sshd_config.d/\*.conf" /etc/ssh/sshd_config
+COPY ./sshd_config.d/bastion.conf /etc/ssh/sshd_config.d/bastion.conf
 
 ## ===========================================================================
 
