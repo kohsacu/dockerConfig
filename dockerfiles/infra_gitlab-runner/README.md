@@ -48,6 +48,7 @@
       | jq -r '.token')
   $ sudo docker compose exec gitlab-runner-docker gitlab-runner register \
       --non-interactive \
+      --name "${TAG_EXECUTOR}-runner (${TAG_TYPE}) on $(hostname -s)" \
       --executor ${TAG_EXECUTOR} \
       --url "${CI_SERVER_URL}" \
       --token "${RUNNER_TOKEN}"
@@ -64,6 +65,7 @@
       | jq -r '.token')
   $ sudo docker compose exec gitlab-runner-docker gitlab-runner register \
       --non-interactive \
+      --name "${TAG_EXECUTOR}-runner (${TAG_TYPE}) on $(hostname -s)" \
       --executor docker \
       --docker-image "docker:27.0.3-dind" \
       --docker-privileged \
