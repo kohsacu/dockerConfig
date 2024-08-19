@@ -61,16 +61,16 @@ tcp   LISTEN     0       32        [fd42:b783:772f:df72::1]:53              [::]
     ```
 - Build & Up
   ```bash
-  $ sudo docker-compose build
-  $ sudo docker-compose up -d
-  $ sudo docker-compose ps
+  $ sudo docker compose build
+  $ sudo docker compose up --detach
+  $ sudo docker compose ps
     Name                Command               State                          Ports
   --------------------------------------------------------------------------------------------------------
   int-ns01   /usr/sbin/named -c /etc/bi ...   Up      172.31.242.152:53->53/tcp, 172.31.242.152:53->53/udp
   ```
 - Check
   ```bash
-  $ sudo docker-compose exec int-named ps -aef
+  $ sudo docker compose exec int-named ps -aef
   UID          PID    PPID  C STIME TTY          TIME CMD
   root           1       0  0 12:08 ?        00:00:00 /sbin/docker-init -- /usr/sb
   bind           9       1  0 12:08 ?        00:00:00 /usr/sbin/named -c /etc/bind

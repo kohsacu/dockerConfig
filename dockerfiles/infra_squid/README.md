@@ -40,7 +40,7 @@ $ sudo systemctl restart rsyslog.service
 - image の作成
 
 ```bash
-$ sudo docker-compose build
+$ sudo docker compose build
 (..snip..)
 
 Successfully built 7d79775c9929
@@ -55,10 +55,10 @@ infra/squid           3.5.27-1            7d79775c9929        55 seconds ago    
 - コンテナの起動
 
 ```bash
-$ sudo docker-compose up -d
+$ sudo docker compose up -d
 Creating squid01 ... done
 
-$ sudo docker-compose ps
+$ sudo docker compose ps
  Name           Command         State           Ports
  --------------------------------------------------------------
  squid01   /sbin/entrypoint.sh   Up      0.0.0.0:3128->3128/tcp
@@ -74,6 +74,6 @@ $ tail -F /var/log/container-squid.log
 - コンテナの停止
 
 ```bash
-$ sudo docker-compose stop
+$ sudo docker compose stop
 Stopping squid01 ... done
 ```

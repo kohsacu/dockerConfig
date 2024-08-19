@@ -32,4 +32,3 @@ services:
             - "${NAMED_PUBLIC}:53/udp"
             - "${NAMED_PUBLIC}:53/tcp"
         network_mode: "bridge"
-
