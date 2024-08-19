@@ -1,4 +1,4 @@
-FROM alpine:3.20.1
+FROM alpine:3.20.2
 
 LABEL maintainer="Kohsacu <kohsacu@email.local>" \
       local.kohsacu.base.image.source=https://github.com/kohsacu/dockerConfig.git
