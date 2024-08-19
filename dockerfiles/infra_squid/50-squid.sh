@@ -25,6 +25,7 @@ else
   echo "Already exists squid cache dir"
 fi
 
+rm -f /var/run/squid/squid.pid
 echo "Starting squid..."
 # /etc/init.d/squid start
 # Usage: squid [-cdhvzCFNRVYX] [-n name] [-s | -l facility] [-f config-file] [-[au] port] [-k signal]

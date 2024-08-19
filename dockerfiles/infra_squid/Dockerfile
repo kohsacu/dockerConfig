@@ -1,9 +1,9 @@
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
 LABEL maintainer="Kohsacu <24363503+kohsacu@users.noreply.github.com>" \
       local.kohsacu.apps.image.source=https://github.com/kohsacu/dockerConfig.git
 
-ARG SQUID_VERSION="3.5.27"
+ARG SQUID_VERSION="5.9"
 ENV SQUID_VERSION="${SQUID_VERSION}" \
     SQUID_CACHE_DIR="/var/spool/squid" \
     SQUID_LOG_DIR="/var/log/squid" \
@@ -34,4 +34,3 @@ RUN set -x \
 ENTRYPOINT ["/sbin/entrypoint.sh"]
 USER ${SQUID_USER}
 VOLUME ["/var/spool/squid","/opt/local/etc/init.d","/opt/local/etc/squid"]
-

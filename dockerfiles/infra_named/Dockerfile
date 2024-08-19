@@ -1,9 +1,9 @@
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
 LABEL maintainer="Kohsacu <24363503+kohsacu@users.noreply.github.com>" \
       local.kohsacu.apps.image.source=https://github.com/kohsacu/dockerConfig.git
 
-ARG NAMED_VERSION="1:9.16.1-0ubuntu2.8"
+ARG NAMED_VERSION="1:9.18.28-0ubuntu0.22.04.1"
 ENV NAMED_VERSION="${NAMED_VERSION}" \
     NAMED_ZONE_DIR="/var/cache/bind" \
     NAMED_USER="bind" \
@@ -16,8 +16,8 @@ RUN set -x \
   && apt upgrade -y \
   && apt install -y \
     bind9=${NAMED_VERSION} \
-    bind9utils \
-    dnsutils \
+    bind9-utils \
+    geoip-database \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN set -x \
@@ -28,4 +28,3 @@ ENTRYPOINT ["/usr/sbin/named"]
 CMD ["-c", "/etc/bind/named.conf", "-u", "bind", "-g"]
 VOLUME ["/etc/bind","/var/cache/bind"]
 #USER ${NAMED_USER}
-
