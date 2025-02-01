@@ -12,9 +12,9 @@
 $ vim ./Dockerfiles/requirements.txt
 ~
 # https://pypi.org/project/ansible/
-ansible~=9.1
+ansible~=10.1                                # <= Rewrite here.
 # https://pypi.org/project/ansible-core/
-ansible-core~=2.16
+ansible-core~=2.17                           # <= Rewrite here.
 ~
 :wq
 ```
@@ -27,8 +27,8 @@ $ cp -ip .env{.template,}
 $ vim .env
 ~
 # Build Arguments
-REPOSITORY=cr.local/prj-id/infra/ansible
-TAG=9.1.0-0-amd64
+REPOSITORY=cr.local/prj-id/infra/ansible     # <= Rewrite here.
+TAG=10.1.0-0-amd64                           # <= Rewrite here.
 ADD_LOCALE=en_US.UTF-8 UTF-8
 SET_LOCALE=en_US.UTF-8
 LC_ALL=en_US.UTF-8
