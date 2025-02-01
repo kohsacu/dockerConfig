@@ -24,7 +24,9 @@ RUN set -x \
     curl \
     expect \
     jq \
+    lftp \
     locales \
+    netbase \
     openssh-client \
     python3-pip \
     python3-setuptools \
