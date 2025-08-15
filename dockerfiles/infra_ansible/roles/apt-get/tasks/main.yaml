@@ -28,6 +28,8 @@
   apt:
     upgrade: safe
     install_recommends: no
+  environment:
+    - NEEDRESTART_MODE: a
   register: _catch_apt_upgrade_
   tags:
     - upgrade
