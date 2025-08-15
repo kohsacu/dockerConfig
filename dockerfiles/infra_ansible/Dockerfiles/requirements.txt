@@ -1,11 +1,11 @@
 #
-# $ sudo docker-compose up -d ansible-shell
-# $ sudo docker-compose exec ansible-shell bash
+# $ sudo docker compose up -d ansible-shell
+# $ sudo docker compose exec ansible-shell bash
 # $ pip3 freeze | tee /tmp/requirements.txt
 # $ exit
 # $ sudo docker cp ansible-shell-con:/tmp/requirements.txt ./Dockerfiles/
 # $ sudo chown 1000:1000 ./Dockerfiles/requirements.txt
-# $ sudo docker-compose down
+# $ sudo docker compose down
 #
 # https://pypi.org/project/ansible/
 ansible~=10.1                               # <= Rewrite here.

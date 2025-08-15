@@ -1,5 +1,4 @@
-version: '3.7'
-
+---
 services:
     bird-A-0:
         env_file:

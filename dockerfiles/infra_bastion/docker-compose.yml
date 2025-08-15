@@ -1,5 +1,4 @@
-version: '3.7'
-
+---
 services:
     ssh-bastion:
         env_file:
