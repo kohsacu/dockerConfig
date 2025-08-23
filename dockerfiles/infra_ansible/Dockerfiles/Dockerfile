@@ -30,9 +30,7 @@ RUN set -x \
     openssh-client \
     python3-pip \
     python3-setuptools \
-    python3-venv \
-    python3.10 \
-    python3.10-venv \
+    python3.11 \
     sshpass \
     tzdata \
     unzip \
@@ -40,8 +38,10 @@ RUN set -x \
 
 COPY ./requirements.txt /root/
 RUN set -x \
-  && pip3 install --no-cache-dir --upgrade pip \
-  && pip3 install --no-cache-dir --requirement /root/requirements.txt
+  && update-alternatives --install /usr/bin/python3 python /usr/bin/python3.10 300 \
+  && update-alternatives --install /usr/bin/python3 python /usr/bin/python3.11 310 \
+  && python3 -m pip install --no-cache-dir --upgrade pip \
+  && python3 -m pip install --no-cache-dir --requirement /root/requirements.txt
 
 ARG LC_ALL="en_US.UTF-8"
 ENV LC_ALL="${SET_LOCALE}"
