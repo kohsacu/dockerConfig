@@ -28,6 +28,7 @@ RUN set -x \
     lftp \
     locales \
     netbase \
+    nmap \
     openssh-client \
     pipx \
     python3-setuptools \
