@@ -1,14 +1,15 @@
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
 LABEL maintainer="Kohsacu <24363503+kohsacu@users.noreply.github.com>" \
     local.kohsacu.base.image.source=https://github.com/kohsacu/dockerConfig.git
 
 #USER root
-#
+
 ARG ADD_LOCALE="en_US.UTF-8 UTF-8"
 ENV ADD_LOCALE="${ADD_LOCALE}"
 ARG SET_LOCALE="en_US.UTF-8"
 ENV SET_LOCALE="${SET_LOCALE}"
+ENV PATH="$PATH:/root/.local/bin"
 
 ENV DEBIAN_FRONTEND="noninteractive"
 
@@ -28,20 +29,22 @@ RUN set -x \
     locales \
     netbase \
     openssh-client \
-    python3-pip \
+    pipx \
     python3-setuptools \
-    python3.11 \
     sshpass \
     tzdata \
     unzip \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-COPY ./requirements.txt /root/
 RUN set -x \
-  && update-alternatives --install /usr/bin/python3 python /usr/bin/python3.10 300 \
-  && update-alternatives --install /usr/bin/python3 python /usr/bin/python3.11 310 \
-  && python3 -m pip install --no-cache-dir --upgrade pip \
-  && python3 -m pip install --no-cache-dir --requirement /root/requirements.txt
+  && pipx install --include-deps \
+     ansible==12.2.0 \
+     ansible-core==2.19.4 \
+     requests \
+     urllib3 \
+     yq \
+     || exit 0 \
+  && ansible-galaxy collection install community.general
 
 ARG LC_ALL="en_US.UTF-8"
 ENV LC_ALL="${SET_LOCALE}"
